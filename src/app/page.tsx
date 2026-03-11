@@ -215,7 +215,7 @@ export default function Home() {
               <input
                 type="text"
                 placeholder="Your first name"
-                className="bg-white/5 border border-white/15 rounded-xl px-5 py-4 text-white placeholder-white/30 text-base focus:outline-none focus:border-[#BFFF00]/40 focus:ring-1 focus:ring-[#BFFF00]/20 w-48"
+                className="bg-white/15 border border-white/30 rounded-xl px-5 py-4 text-white placeholder-white/60 text-base focus:outline-none focus:border-[#BFFF00]/60 focus:ring-2 focus:ring-[#BFFF00]/30 w-48"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && name.trim()) scrollToScene1(); }}
@@ -272,7 +272,7 @@ export default function Home() {
             THE REALITY
           </p>
 
-          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight">
+          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow">
             For years, students in Pakistan have been stuck with boring
             40-minute lectures.
           </h2>
@@ -297,7 +297,7 @@ export default function Home() {
             THE FIX
           </p>
 
-          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight">
+          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow">
             Every topic. Broken into 10-minute lessons.
           </h2>
 
@@ -308,7 +308,7 @@ export default function Home() {
           <div className="scene-text delay-4 bar-visual mt-10 max-w-md mx-auto space-y-4">
             <div>
               <div className="bar-long rounded h-3 w-full border border-red-500/40" style={{ background: 'rgba(239, 68, 68, 0.85)' }} />
-              <p className="bar-label text-white/50 text-xs mt-1">40 min lecture</p>
+              <p className="bar-label text-white/75 text-xs mt-1">40 min lecture</p>
             </div>
             <div className="bar-short-row flex gap-2">
               <div className="bar-short bg-[#BFFF00] rounded h-3 w-[23%]" />
@@ -316,7 +316,7 @@ export default function Home() {
               <div className="bar-short bg-[#BFFF00] rounded h-3 w-[23%]" />
               <div className="bar-short bg-[#BFFF00] rounded h-3 w-[23%]" />
             </div>
-            <p className="bar-label text-white/30 text-xs">10 min each</p>
+            <p className="bar-label text-white/75 text-xs">10 min each</p>
           </div>
         </div>
       </section>
@@ -335,7 +335,7 @@ export default function Home() {
             THE CHECK
           </p>
 
-          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight">
+          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow">
             Every lecture has a built-in quiz.
           </h2>
 
@@ -345,7 +345,7 @@ export default function Home() {
 
           {/* Desktop: row — Mobile: horizontal scroll */}
           <div className="hidden md:flex gap-4 mt-8 max-w-4xl mx-auto">
-            <div className="quiz-card flex-1 bg-white/5 border border-[#22c55e]/30 rounded-2xl p-6 text-left">
+            <div className="quiz-card flex-1 glass-card border-[#22c55e]/20 rounded-2xl p-6 text-left">
               <p className="text-[#22c55e] text-xs tracking-wide uppercase mb-3">Biology</p>
               <p className="question-text text-white font-medium mb-4">What is the powerhouse of the cell?</p>
               <div className="space-y-2">
@@ -355,7 +355,7 @@ export default function Home() {
               <p className="text-[#22c55e] text-sm mt-3">✓ Correct!</p>
             </div>
 
-            <div className="quiz-card flex-1 bg-white/5 border border-[#3b82f6]/30 rounded-2xl p-6 text-left">
+            <div className="quiz-card flex-1 glass-card border-[#3b82f6]/20 rounded-2xl p-6 text-left">
               <p className="text-[#3b82f6] text-xs tracking-wide uppercase mb-3">Physics</p>
               <p className="question-text text-white font-medium mb-4">What is the SI unit of force?</p>
               <div className="space-y-2">
@@ -365,7 +365,7 @@ export default function Home() {
               <p className="text-[#3b82f6] text-sm mt-3">✓ Correct!</p>
             </div>
 
-            <div className="quiz-card flex-1 bg-white/5 border border-[#a855f7]/30 rounded-2xl p-6 text-left">
+            <div className="quiz-card flex-1 glass-card border-[#a855f7]/20 rounded-2xl p-6 text-left">
               <p className="text-[#a855f7] text-xs tracking-wide uppercase mb-3">Mathematics</p>
               <p className="question-text text-white font-medium mb-4">What is the value of sin(90°)?</p>
               <div className="space-y-2">
@@ -379,7 +379,7 @@ export default function Home() {
           {/* Mobile: horizontal scroll */}
           <div className="flex md:hidden gap-4 mt-8 overflow-x-auto snap-x snap-mandatory pb-4 -mx-6 px-6 scrollbar-hide">
             <div className="snap-center shrink-0 w-[280px]">
-              <div className="quiz-card bg-white/5 border border-[#22c55e]/30 rounded-2xl p-6 text-left h-full">
+              <div className="quiz-card glass-card border-[#22c55e]/20 rounded-2xl p-6 text-left h-full">
                 <p className="text-[#22c55e] text-xs tracking-wide uppercase mb-3">Biology</p>
                 <p className="question-text text-white font-medium mb-4">What is the powerhouse of the cell?</p>
                 <div className="space-y-2">
@@ -390,7 +390,7 @@ export default function Home() {
               </div>
             </div>
             <div className="snap-center shrink-0 w-[280px]">
-              <div className="quiz-card bg-white/5 border border-[#3b82f6]/30 rounded-2xl p-6 text-left h-full">
+              <div className="quiz-card glass-card border-[#3b82f6]/20 rounded-2xl p-6 text-left h-full">
                 <p className="text-[#3b82f6] text-xs tracking-wide uppercase mb-3">Physics</p>
                 <p className="question-text text-white font-medium mb-4">What is the SI unit of force?</p>
                 <div className="space-y-2">
@@ -401,7 +401,7 @@ export default function Home() {
               </div>
             </div>
             <div className="snap-center shrink-0 w-[280px]">
-              <div className="quiz-card bg-white/5 border border-[#a855f7]/30 rounded-2xl p-6 text-left h-full">
+              <div className="quiz-card glass-card border-[#a855f7]/20 rounded-2xl p-6 text-left h-full">
                 <p className="text-[#a855f7] text-xs tracking-wide uppercase mb-3">Mathematics</p>
                 <p className="question-text text-white font-medium mb-4">What is the value of sin(90°)?</p>
                 <div className="space-y-2">
@@ -424,12 +424,12 @@ export default function Home() {
         data-scene="4"
         className="min-h-screen flex items-center justify-center relative px-6"
       >
-        <div className="text-center max-w-[90%] md:max-w-[700px]">
+        <div className="text-center max-w-[90%] md:max-w-[900px]">
           <p className="scene-text delay-1 eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
             THE BACKUP
           </p>
 
-          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight">
+          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow">
             Meet Blitz. Your AI tutor trained on every Matric and FSc exam.
           </h2>
 
@@ -437,26 +437,85 @@ export default function Home() {
             بلٹز سے ملو۔ تمہارا AI ٹیوٹر جو میٹرک اور ایف ایس سی کے ہر امتحان پر تیار ہے۔
           </p>
 
-          <div className="scene-text delay-4 chat-mockup mt-10 max-w-[90%] md:max-w-md mx-auto bg-white/5 border border-white/10 rounded-2xl p-6 text-left space-y-4">
-            <p className="text-[#BFFF00] text-xs tracking-wide">⚡ Blitz</p>
+          {/* Desktop: two chats side by side */}
+          <div className="hidden md:flex gap-4 mt-10 max-w-4xl mx-auto">
+            <div className="scene-text delay-4 chat-mockup flex-1 glass-card rounded-2xl p-6 text-left space-y-4">
+              <p className="text-white/50 text-xs tracking-wide uppercase mb-1">English</p>
+              <p className="text-[#BFFF00] text-xs tracking-wide">⚡ Blitz</p>
+              <p className="text-[#BFFF00]/70 text-[10px] tracking-wide urdu-text mt-0.5">بلٹز</p>
 
-            <div className="flex justify-end chat-bubble">
-              <div className="bg-white/10 rounded-2xl rounded-br-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
-                I don&apos;t understand Newton&apos;s third law
+              <div className="flex justify-end chat-bubble">
+                <div className="bg-white/10 rounded-2xl rounded-br-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
+                  I don&apos;t understand Newton&apos;s third law
+                </div>
+              </div>
+              <div className="flex justify-start chat-bubble">
+                <div className="bg-[#0d6b3f] rounded-2xl rounded-bl-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
+                  Think of it this way — when you push a wall, the wall pushes back on your hand with the same force. That&apos;s why your hand hurts! The forces are equal and opposite. 🧱
+                </div>
+              </div>
+              <div className="flex justify-end chat-bubble">
+                <div className="bg-white/10 rounded-2xl rounded-br-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
+                  Oh that makes sense!
+                </div>
               </div>
             </div>
 
-            <div className="flex justify-start chat-bubble">
-              <div className="bg-[#0d6b3f] rounded-2xl rounded-bl-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
-                Think of it this way — when you push a wall, the wall pushes
-                back on your hand with the same force. That&apos;s why your hand
-                hurts! The forces are equal and opposite. 🧱
+            <div className="scene-text delay-4 chat-mockup flex-1 glass-card rounded-2xl p-6 text-left space-y-4">
+              <p className="text-white/50 text-xs tracking-wide uppercase mb-1">Urdu</p>
+              <p className="text-[#BFFF00] text-xs tracking-wide">⚡ Blitz</p>
+              <p className="text-[#BFFF00]/70 text-[10px] tracking-wide mt-0.5">Blitz</p>
+
+              <div className="flex justify-end chat-bubble">
+                <div className="bg-white/10 rounded-2xl rounded-br-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
+                  mujhe newton ka teesra law samajh nahi araha
+                </div>
+              </div>
+              <div className="flex justify-start chat-bubble">
+                <div className="bg-[#0d6b3f] rounded-2xl rounded-bl-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
+                  Socho aise — jab aap deewar ko dhakelte hain, deewar aap ke haath par usi qawat se wapas dhakelti hai. Isi liye haath dard karta hai! Qawatein barabar aur mukhalif hain. 🧱
+                </div>
+              </div>
+              <div className="flex justify-end chat-bubble">
+                <div className="bg-white/10 rounded-2xl rounded-br-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
+                  Oh samajh aa gayi!
+                </div>
               </div>
             </div>
+          </div>
 
-            <div className="flex justify-end chat-bubble">
-              <div className="bg-white/10 rounded-2xl rounded-br-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
-                Oh that makes sense!
+          {/* Mobile: horizontal scroll, two chats */}
+          <div className="flex md:hidden gap-4 mt-10 overflow-x-auto snap-x snap-mandatory pb-4 -mx-6 px-6 scrollbar-hide">
+            <div className="snap-center shrink-0 w-[280px]">
+              <div className="scene-text delay-4 chat-mockup h-full glass-card rounded-2xl p-5 text-left space-y-3">
+                <p className="text-white/50 text-xs tracking-wide uppercase mb-1">English</p>
+                <p className="text-[#BFFF00] text-xs tracking-wide">⚡ Blitz</p>
+                <p className="text-[#BFFF00]/70 text-[10px] tracking-wide urdu-text mt-0.5">بلٹز</p>
+                <div className="flex justify-end chat-bubble">
+                  <div className="bg-white/10 rounded-2xl rounded-br-md py-2.5 px-4 text-white/90 max-w-[85%] text-sm">I don&apos;t understand Newton&apos;s third law</div>
+                </div>
+                <div className="flex justify-start chat-bubble">
+                  <div className="bg-[#0d6b3f] rounded-2xl rounded-bl-md py-2.5 px-4 text-white/90 max-w-[85%] text-sm">Think of it this way — when you push a wall, the wall pushes back. The forces are equal and opposite. 🧱</div>
+                </div>
+                <div className="flex justify-end chat-bubble">
+                  <div className="bg-white/10 rounded-2xl rounded-br-md py-2.5 px-4 text-white/90 max-w-[85%] text-sm">Oh that makes sense!</div>
+                </div>
+              </div>
+            </div>
+            <div className="snap-center shrink-0 w-[280px]">
+              <div className="scene-text delay-4 chat-mockup h-full glass-card rounded-2xl p-5 text-left space-y-3">
+                <p className="text-white/50 text-xs tracking-wide uppercase mb-1">Urdu</p>
+                <p className="text-[#BFFF00] text-xs tracking-wide">⚡ Blitz</p>
+                <p className="text-[#BFFF00]/70 text-[10px] tracking-wide mt-0.5">Blitz</p>
+                <div className="flex justify-end chat-bubble">
+                  <div className="bg-white/10 rounded-2xl rounded-br-md py-2.5 px-4 text-white/90 max-w-[85%] text-sm">mujhe newton ka teesra law samajh nahi araha</div>
+                </div>
+                <div className="flex justify-start chat-bubble">
+                  <div className="bg-[#0d6b3f] rounded-2xl rounded-bl-md py-2.5 px-4 text-white/90 max-w-[85%] text-sm">Socho aise — jab aap deewar ko dhakelte hain, deewar wapas dhakelti hai. Qawatein barabar aur mukhalif hain. 🧱</div>
+                </div>
+                <div className="flex justify-end chat-bubble">
+                  <div className="bg-white/10 rounded-2xl rounded-br-md py-2.5 px-4 text-white/90 max-w-[85%] text-sm">Oh samajh aa gayi!</div>
+                </div>
               </div>
             </div>
           </div>
@@ -521,7 +580,7 @@ export default function Home() {
             </p>
           </div>
 
-          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight mt-6">
+          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow mt-6">
             See what an Aghaaz lesson feels like.
           </h2>
 
@@ -544,7 +603,7 @@ export default function Home() {
           </div>
 
           {/* Video container */}
-          <div className="scene-text delay-3 demo-container w-full max-w-3xl mx-auto rounded-xl overflow-hidden border border-white/5 bg-[#04160c] shadow-2xl shadow-black/50 relative">
+          <div className="scene-text delay-3 demo-container w-full max-w-3xl mx-auto rounded-xl overflow-hidden glass bg-[#04160c]/80 shadow-2xl shadow-black/50 relative">
             <div className="relative aspect-video">
               {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
               <video
@@ -555,10 +614,10 @@ export default function Home() {
                 className="w-full h-full object-cover"
               />
 
-              {/* Quiz overlay */}
+              {/* Quiz overlay — fixed full-viewport on mobile so it's never clipped */}
               {activeQuiz && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/85 backdrop-blur-sm z-30">
-                  <div className="rounded-2xl border border-[#BFFF00]/15 bg-[#0a1a0f]/95 p-6 sm:p-8 max-w-sm w-[90%] text-left">
+                <div className="fixed inset-0 md:absolute flex items-center justify-center bg-black/85 backdrop-blur-sm z-50 p-4 md:p-0">
+                  <div className="rounded-2xl border border-[#BFFF00]/15 bg-[#0a1a0f]/95 backdrop-blur-xl p-5 sm:p-8 max-w-sm w-full md:w-[90%] text-left max-h-[90vh] md:max-h-none overflow-y-auto shadow-2xl shadow-black/40">
                     <p className="text-[#BFFF00] text-xs tracking-wide uppercase mb-1">Checkpoint Quiz</p>
                     <p className="text-lg sm:text-xl font-semibold text-white mb-5">
                       {activeQuiz.checkpoint.question}
@@ -669,7 +728,7 @@ export default function Home() {
         className="min-h-screen flex items-center justify-center relative px-6"
       >
         <div className="text-center max-w-[90%] md:max-w-[700px]">
-          <h2 className="scene-text delay-1 text-4xl md:text-6xl font-bold text-white">
+          <h2 className="scene-text delay-1 text-4xl md:text-6xl font-bold text-white headline-glow">
             Ready, {name || 'friend'}?
           </h2>
 
