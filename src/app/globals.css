@@ -1,6 +1,25 @@
+@import url('https://fonts.cdnfonts.com/css/ethnocentric');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+.font-ethnocentric {
+  font-family: 'Ethnocentric Rg', sans-serif;
+}
 
 /* ───────────────────────────────────────────
    GRID BACKGROUND LAYERS
@@ -282,7 +301,7 @@
   transform: translateX(0);
 }
 
-/* Scene 3 — quiz card */
+/* Scene 3 — quiz cards (staggered) */
 [data-scene="3"] .quiz-card {
   opacity: 0;
   transform: translateY(40px) rotate(2deg);
@@ -292,6 +311,9 @@
   opacity: 1;
   transform: translateY(0) rotate(0deg);
 }
+[data-scene="3"].scene-active .quiz-card:nth-child(1) { transition-delay: 0.3s; }
+[data-scene="3"].scene-active .quiz-card:nth-child(2) { transition-delay: 0.5s; }
+[data-scene="3"].scene-active .quiz-card:nth-child(3) { transition-delay: 0.7s; }
 
 /* Scene 4 — chat bubbles */
 [data-scene="4"] .chat-bubble {
@@ -360,30 +382,251 @@
 }
 
 /* ───────────────────────────────────────────
-   MOBILE OVERRIDES
+   MOBILE OVERRIDES (max-width: 640px)
+   Targeting cheap Android phones on Pakistani
+   mobile networks — Samsung A03, Redmi 9, etc.
    ─────────────────────────────────────────── */
 
-@media (max-width: 768px) {
-  .progress-track { display: none; }
-  .star-streak:nth-child(even) { display: none; }
+@media (max-width: 640px) {
 
-  [data-scene] .scene-text {
-    transform: translateY(30px) !important;
+  /* ── 1. Scene layout ── */
+
+  [data-scene] {
+    min-height: 100svh;
+    padding: 3rem 1.5rem;
   }
-  [data-scene].scene-active .scene-text {
+
+  [data-scene="2"],
+  [data-scene="3"],
+  [data-scene="4"],
+  [data-scene="6"] {
+    min-height: auto;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+
+  /* ── 2. Typography scaling ── */
+
+  [data-scene="0"] h1 {
+    font-size: clamp(28px, 8vw, 40px) !important;
+  }
+
+  [data-scene] h2 {
+    font-size: clamp(24px, 7vw, 36px) !important;
+    line-height: 1.2;
+  }
+
+  .real-price {
+    font-size: clamp(36px, 12vw, 56px) !important;
+  }
+
+  .crossed-price {
+    font-size: clamp(18px, 5vw, 24px) !important;
+  }
+
+  [data-scene] .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+  }
+
+  .urdu-text {
+    font-size: clamp(16px, 5vw, 22px) !important;
+    line-height: 2.2;
+  }
+
+  /* ── 3. Name input ── */
+
+  .name-input-row {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .name-input-row input {
+    width: 100%;
+    text-align: center;
+    padding: 1rem;
+    font-size: 16px;
+  }
+
+  .name-input-row button {
+    width: 100%;
+    padding: 1rem;
+    font-size: 16px;
+  }
+
+  /* ── 4. Visual elements ── */
+
+  /* Bar chart */
+  .bar-visual {
+    max-width: 100%;
+  }
+
+  .bar-long {
+    height: 10px;
+    border-radius: 5px;
+  }
+
+  .bar-short-row {
+    gap: 6px;
+  }
+
+  .bar-short {
+    height: 10px;
+    border-radius: 5px;
+  }
+
+  .bar-label {
+    font-size: 11px;
+  }
+
+  /* Quiz card */
+  .quiz-card {
+    max-width: 100%;
+    padding: 1.25rem;
+    border-radius: 1rem;
+  }
+
+  .quiz-card .question-text {
+    font-size: 15px;
+  }
+
+  .quiz-card .option-btn {
+    padding: 0.75rem 1rem;
+    font-size: 14px;
+  }
+
+  /* Chat mockup */
+  .chat-mockup {
+    max-width: 100%;
+    padding: 1rem;
+  }
+
+  .chat-bubble > div {
+    max-width: 85%;
+    padding: 0.75rem 1rem;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Demo player */
+  .demo-container {
+    border-radius: 0.75rem;
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+    width: calc(100% + 1rem);
+  }
+
+  .demo-note {
+    font-size: 12px;
+    padding: 0 0.5rem;
+  }
+
+  /* Final CTA buttons */
+  .final-cta-row {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .final-cta-row a {
+    width: 100%;
+    text-align: center;
+    padding: 1rem;
+    font-size: 16px;
+  }
+
+  /* ── 5. Background performance ── */
+
+  .glow-orb {
+    width: 400px;
+    height: 400px;
+    filter: blur(50px);
+    opacity: 0.7;
+    transition: none !important;
+  }
+
+  .grid-perspective::before {
+    display: none;
+  }
+
+  .grid-bg {
+    background-size: 80px 80px;
+    opacity: 0.7;
+  }
+
+  .stars {
+    background-image:
+      radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,0.12), transparent),
+      radial-gradient(1px 1px at 55% 65%, rgba(255,255,255,0.1), transparent),
+      radial-gradient(1px 1px at 80% 20%, rgba(255,255,255,0.08), transparent),
+      radial-gradient(1px 1px at 35% 85%, rgba(191,255,0,0.08), transparent);
+  }
+
+  .star-streaks {
+    display: none;
+  }
+
+  .progress-track {
+    display: none;
+  }
+
+  /* ── 6. Animation simplification ── */
+
+  [data-scene] .scene-text,
+  [data-scene] .quiz-card,
+  [data-scene] .chat-mockup,
+  [data-scene] .chat-bubble,
+  [data-scene] .bar-visual,
+  [data-scene] .demo-container {
+    opacity: 0;
+    transform: translateY(25px) !important;
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+
+  [data-scene].scene-active .scene-text,
+  [data-scene].scene-active .quiz-card,
+  [data-scene].scene-active .chat-mockup,
+  [data-scene].scene-active .chat-bubble,
+  [data-scene].scene-active .bar-visual,
+  [data-scene].scene-active .demo-container {
+    opacity: 1;
     transform: translateY(0) !important;
   }
-}
 
-@media (max-width: 640px) {
-  .hero-input-row {
-    flex-direction: column;
+  [data-scene].scene-active .delay-1 { transition-delay: 0s; }
+  [data-scene].scene-active .delay-2 { transition-delay: 0.1s; }
+  [data-scene].scene-active .delay-3 { transition-delay: 0.2s; }
+  [data-scene].scene-active .delay-4 { transition-delay: 0.3s; }
+
+  [data-scene="5"] .real-price {
+    transform: translateY(25px) !important;
   }
-  .hero-input-row input,
-  .hero-input-row button {
-    width: 100%;
+  [data-scene="5"].scene-active .real-price {
+    transform: translateY(0) !important;
   }
-  .cta-buttons {
-    flex-direction: column;
+
+  [data-scene="3"] .quiz-card {
+    transform: translateY(25px) !important;
+  }
+  [data-scene="3"].scene-active .quiz-card {
+    transform: translateY(0) !important;
+    transition-delay: 0s !important;
+  }
+
+  /* ── 7. Touch targets ── */
+
+  button, a[role="button"], .final-cta-row a {
+    min-height: 48px;
+  }
+
+  .signin-link {
+    padding: 8px 0;
+    display: inline-block;
+  }
+
+  .scroll-indicator {
+    bottom: 24px;
+    padding: 12px;
   }
 }

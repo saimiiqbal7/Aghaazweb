@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Nastaliq_Urdu } from "next/font/google";
 import "./globals.css";
 
@@ -12,11 +12,19 @@ const nastaliq = Noto_Nastaliq_Urdu({
   weight: ["400", "700"],
   variable: "--font-urdu",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
-  title: "Aghaaz — The Aghaaz Flight",
+  title: "Aghaaz — Take the Flight",
   description: "Take the Aghaaz Flight",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

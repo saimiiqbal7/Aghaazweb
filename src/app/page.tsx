@@ -6,6 +6,7 @@ export default function Home() {
   const [name, setName] = useState('');
 
   useEffect(() => {
+    const isMobile = window.innerWidth < 640;
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -18,7 +19,7 @@ export default function Home() {
           }
         });
       },
-      { threshold: 0.3 }
+      { threshold: isMobile ? 0.15 : 0.3 }
     );
 
     document.querySelectorAll('[data-scene]').forEach((el) => {
@@ -83,9 +84,12 @@ export default function Home() {
         className="min-h-screen flex items-center justify-center relative px-6"
       >
         <div className="text-center max-w-[90%] md:max-w-[700px]">
-          <p className="scene-text delay-1 text-xs tracking-widest uppercase text-white/30 mb-6">
-            AGHAAZ
-          </p>
+          <div className="scene-text delay-1 flex flex-col items-center gap-4 mb-6">
+            <img src="/aghaaz-logo.png" alt="Aghaaz" className="h-16 md:h-20 w-auto object-contain" />
+            <p className="font-ethnocentric text-xs tracking-widest uppercase text-white/90">
+              AGHAAZ
+            </p>
+          </div>
 
           <h1
             className="scene-text delay-2 gradient-text font-extrabold text-center"
@@ -99,7 +103,7 @@ export default function Home() {
           </p>
 
           <div className="scene-text delay-4 mt-8 flex justify-center">
-            <div className="hero-input-row flex items-center gap-3">
+            <div className="name-input-row flex items-center gap-3">
               <input
                 type="text"
                 placeholder="Your first name"
@@ -125,14 +129,14 @@ export default function Home() {
           <div className="scene-text delay-5 mt-6">
             <a
               href="/login"
-              className="text-white/30 text-sm underline underline-offset-4 hover:text-white/50 transition-colors"
+              className="signin-link text-white/30 text-sm underline underline-offset-4 hover:text-white/50 transition-colors"
             >
               Already a member? Sign in
             </a>
           </div>
         </div>
 
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white/20 scroll-bounce">
+        <div className="scroll-indicator absolute bottom-10 left-1/2 -translate-x-1/2 text-white/20 scroll-bounce">
           <svg
             width="24"
             height="24"
@@ -156,7 +160,7 @@ export default function Home() {
         className="min-h-screen flex items-center justify-center relative px-6"
       >
         <div className="text-center max-w-[90%] md:max-w-[700px]">
-          <p className="scene-text delay-1 text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
+          <p className="scene-text delay-1 eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
             THE REALITY
           </p>
 
@@ -181,7 +185,7 @@ export default function Home() {
         className="min-h-screen flex items-center justify-center relative px-6"
       >
         <div className="text-center max-w-[90%] md:max-w-[700px]">
-          <p className="scene-text delay-1 text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
+          <p className="scene-text delay-1 eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
             THE FIX
           </p>
 
@@ -193,18 +197,18 @@ export default function Home() {
             ہر ٹاپک۔ دس منٹ کے آسان سبق میں۔
           </p>
 
-          <div className="scene-text delay-4 mt-10 max-w-md mx-auto space-y-4">
+          <div className="scene-text delay-4 bar-visual mt-10 max-w-md mx-auto space-y-4">
             <div>
-              <div className="bar-long bg-white/10 rounded h-3 w-full" />
-              <p className="text-white/30 text-xs mt-1">40 min lecture</p>
+              <div className="bar-long rounded h-3 w-full border border-red-500/40" style={{ background: 'rgba(239, 68, 68, 0.85)' }} />
+              <p className="bar-label text-white/50 text-xs mt-1">40 min lecture</p>
             </div>
-            <div className="flex gap-2">
+            <div className="bar-short-row flex gap-2">
               <div className="bar-short bg-[#BFFF00] rounded h-3 w-[23%]" />
               <div className="bar-short bg-[#BFFF00] rounded h-3 w-[23%]" />
               <div className="bar-short bg-[#BFFF00] rounded h-3 w-[23%]" />
               <div className="bar-short bg-[#BFFF00] rounded h-3 w-[23%]" />
             </div>
-            <p className="text-white/30 text-xs">10 min each</p>
+            <p className="bar-label text-white/30 text-xs">10 min each</p>
           </div>
         </div>
       </section>
@@ -218,8 +222,8 @@ export default function Home() {
         data-scene="3"
         className="min-h-screen flex items-center justify-center relative px-6"
       >
-        <div className="text-center max-w-[90%] md:max-w-[700px]">
-          <p className="scene-text delay-1 text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
+        <div className="text-center max-w-[90%] md:max-w-[900px]">
+          <p className="scene-text delay-1 eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
             THE CHECK
           </p>
 
@@ -231,19 +235,74 @@ export default function Home() {
             ہر لیکچر کے اندر کوئز ہے۔
           </p>
 
-          <div className="quiz-card delay-4 mt-10 max-w-[90%] md:max-w-md mx-auto bg-white/5 border border-white/10 rounded-2xl p-8 text-left">
-            <p className="text-white font-medium mb-5">
-              Which operator is solved first?
-            </p>
-            <div className="space-y-3">
-              <div className="bg-white/5 border border-white/10 rounded-xl py-3 px-5 text-white/70">
-                Addition
+          {/* Desktop: row — Mobile: horizontal scroll */}
+          <div className="hidden md:flex gap-4 mt-8 max-w-4xl mx-auto">
+            <div className="quiz-card flex-1 bg-white/5 border border-[#22c55e]/30 rounded-2xl p-6 text-left">
+              <p className="text-[#22c55e] text-xs tracking-wide uppercase mb-3">Biology</p>
+              <p className="question-text text-white font-medium mb-4">What is the powerhouse of the cell?</p>
+              <div className="space-y-2">
+                <div className="option-btn bg-white/5 border border-white/10 rounded-xl py-3 px-5 text-white/70">Nucleus</div>
+                <div className="option-btn bg-[#22c55e]/10 border border-[#22c55e]/50 rounded-xl py-3 px-5 text-[#22c55e]">Mitochondria</div>
               </div>
-              <div className="bg-[#BFFF00]/10 border border-[#BFFF00]/50 rounded-xl py-3 px-5 text-[#BFFF00]">
-                Multiplication
+              <p className="text-[#22c55e] text-sm mt-3">✓ Correct!</p>
+            </div>
+
+            <div className="quiz-card flex-1 bg-white/5 border border-[#3b82f6]/30 rounded-2xl p-6 text-left">
+              <p className="text-[#3b82f6] text-xs tracking-wide uppercase mb-3">Physics</p>
+              <p className="question-text text-white font-medium mb-4">What is the SI unit of force?</p>
+              <div className="space-y-2">
+                <div className="option-btn bg-[#3b82f6]/10 border border-[#3b82f6]/50 rounded-xl py-3 px-5 text-[#3b82f6]">Newton</div>
+                <div className="option-btn bg-white/5 border border-white/10 rounded-xl py-3 px-5 text-white/70">Joule</div>
+              </div>
+              <p className="text-[#3b82f6] text-sm mt-3">✓ Correct!</p>
+            </div>
+
+            <div className="quiz-card flex-1 bg-white/5 border border-[#a855f7]/30 rounded-2xl p-6 text-left">
+              <p className="text-[#a855f7] text-xs tracking-wide uppercase mb-3">Mathematics</p>
+              <p className="question-text text-white font-medium mb-4">What is the value of sin(90°)?</p>
+              <div className="space-y-2">
+                <div className="option-btn bg-white/5 border border-white/10 rounded-xl py-3 px-5 text-white/70">0</div>
+                <div className="option-btn bg-[#a855f7]/10 border border-[#a855f7]/50 rounded-xl py-3 px-5 text-[#a855f7]">1</div>
+              </div>
+              <p className="text-[#a855f7] text-sm mt-3">✓ Correct!</p>
+            </div>
+          </div>
+
+          {/* Mobile: horizontal scroll */}
+          <div className="flex md:hidden gap-4 mt-8 overflow-x-auto snap-x snap-mandatory pb-4 -mx-6 px-6 scrollbar-hide">
+            <div className="snap-center shrink-0 w-[280px]">
+              <div className="quiz-card bg-white/5 border border-[#22c55e]/30 rounded-2xl p-6 text-left h-full">
+                <p className="text-[#22c55e] text-xs tracking-wide uppercase mb-3">Biology</p>
+                <p className="question-text text-white font-medium mb-4">What is the powerhouse of the cell?</p>
+                <div className="space-y-2">
+                  <div className="option-btn bg-white/5 border border-white/10 rounded-xl py-3 px-5 text-white/70">Nucleus</div>
+                  <div className="option-btn bg-[#22c55e]/10 border border-[#22c55e]/50 rounded-xl py-3 px-5 text-[#22c55e]">Mitochondria</div>
+                </div>
+                <p className="text-[#22c55e] text-sm mt-3">✓ Correct!</p>
               </div>
             </div>
-            <p className="text-[#BFFF00] text-sm mt-4">✓ Correct!</p>
+            <div className="snap-center shrink-0 w-[280px]">
+              <div className="quiz-card bg-white/5 border border-[#3b82f6]/30 rounded-2xl p-6 text-left h-full">
+                <p className="text-[#3b82f6] text-xs tracking-wide uppercase mb-3">Physics</p>
+                <p className="question-text text-white font-medium mb-4">What is the SI unit of force?</p>
+                <div className="space-y-2">
+                  <div className="option-btn bg-[#3b82f6]/10 border border-[#3b82f6]/50 rounded-xl py-3 px-5 text-[#3b82f6]">Newton</div>
+                  <div className="option-btn bg-white/5 border border-white/10 rounded-xl py-3 px-5 text-white/70">Joule</div>
+                </div>
+                <p className="text-[#3b82f6] text-sm mt-3">✓ Correct!</p>
+              </div>
+            </div>
+            <div className="snap-center shrink-0 w-[280px]">
+              <div className="quiz-card bg-white/5 border border-[#a855f7]/30 rounded-2xl p-6 text-left h-full">
+                <p className="text-[#a855f7] text-xs tracking-wide uppercase mb-3">Mathematics</p>
+                <p className="question-text text-white font-medium mb-4">What is the value of sin(90°)?</p>
+                <div className="space-y-2">
+                  <div className="option-btn bg-white/5 border border-white/10 rounded-xl py-3 px-5 text-white/70">0</div>
+                  <div className="option-btn bg-[#a855f7]/10 border border-[#a855f7]/50 rounded-xl py-3 px-5 text-[#a855f7]">1</div>
+                </div>
+                <p className="text-[#a855f7] text-sm mt-3">✓ Correct!</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -258,7 +317,7 @@ export default function Home() {
         className="min-h-screen flex items-center justify-center relative px-6"
       >
         <div className="text-center max-w-[90%] md:max-w-[700px]">
-          <p className="scene-text delay-1 text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
+          <p className="scene-text delay-1 eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
             THE BACKUP
           </p>
 
@@ -270,7 +329,7 @@ export default function Home() {
             بلٹز سے ملو۔ تمہارا AI ٹیوٹر جو میٹرک اور ایف ایس سی کے ہر امتحان پر تیار ہے۔
           </p>
 
-          <div className="scene-text delay-4 mt-10 max-w-[90%] md:max-w-md mx-auto bg-white/5 border border-white/10 rounded-2xl p-6 text-left space-y-4">
+          <div className="scene-text delay-4 chat-mockup mt-10 max-w-[90%] md:max-w-md mx-auto bg-white/5 border border-white/10 rounded-2xl p-6 text-left space-y-4">
             <p className="text-[#BFFF00] text-xs tracking-wide">⚡ Blitz</p>
 
             <div className="flex justify-end chat-bubble">
@@ -306,11 +365,11 @@ export default function Home() {
         className="min-h-screen flex items-center justify-center relative px-6"
       >
         <div className="text-center max-w-[90%] md:max-w-[700px]">
-          <p className="scene-text delay-1 text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
+          <p className="scene-text delay-1 eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
             THE PRICE
           </p>
 
-          <p className="scene-text delay-2 text-2xl md:text-4xl text-white/30 line-through decoration-white/30">
+          <p className="scene-text delay-2 crossed-price text-2xl md:text-4xl text-white/30 line-through decoration-white/30">
             PKR 12,000/month
           </p>
 
@@ -346,7 +405,7 @@ export default function Home() {
       >
         <div className="text-center max-w-[90%] md:max-w-[900px]">
           <div className="scene-text delay-1">
-            <p className="text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-1">
+            <p className="eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-1">
               TRY IT NOW
             </p>
             <p className="text-sm urdu-text text-[#BFFF00]/40">
@@ -362,7 +421,7 @@ export default function Home() {
             دیکھو آغاز کا سبق کیسا ہوتا ہے۔
           </p>
 
-          <div className="scene-text delay-3 w-full max-w-3xl mx-auto mt-8 rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50">
+          <div className="scene-text delay-3 demo-container w-full max-w-3xl mx-auto mt-8 rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50">
             <a
               href="http://localhost:3001"
               target="_blank"
@@ -382,7 +441,7 @@ export default function Home() {
             </a>
           </div>
 
-          <div className="scene-text delay-4 mt-4">
+          <div className="scene-text delay-4 demo-note mt-4">
             <p className="text-sm text-white/30">
               This is a real Aghaaz lesson with a built-in quiz. Try answering
               when it pops up.
@@ -413,7 +472,7 @@ export default function Home() {
           </p>
 
           <div className="scene-text delay-2 mt-8">
-            <div className="cta-buttons flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="final-cta-row flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
                 href="/signup"
                 className="cta-button bg-[#BFFF00] text-[#04160c] font-semibold px-10 py-4 rounded-xl hover:shadow-[0_0_40px_rgba(191,255,0,0.2)] hover:-translate-y-0.5 transition-all text-lg"
