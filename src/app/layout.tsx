@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Nastaliq_Urdu } from "next/font/google";
 import "./globals.css";
-import Grid3D from "./components/Grid3D";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -43,11 +42,13 @@ export default function RootLayout({
           color: "#ffffff",
         }}
       >
-        <Grid3D />
-        <div className="ambient-orb orb-1" />
-        <div className="ambient-orb orb-2" />
-        <div className="ambient-orb orb-3" />
+        <div className="aurora-bg">
+          <div className="aurora-blob blob-1" />
+          <div className="aurora-blob blob-2" />
+          <div className="aurora-blob blob-3" />
+        </div>
         <div className="glow-orb" />
+        <div className="aurora-noise" />
         <div className="stars" />
         <div className="particles" />
         <div className="vignette" />

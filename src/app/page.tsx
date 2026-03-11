@@ -166,7 +166,8 @@ export default function Home() {
   };
 
   return (
-    <main className="relative z-10">
+    <>
+    <main className="relative z-10" style={{ perspective: '1200px', perspectiveOrigin: '50% 50%' }}>
       {/* Star streaks */}
       <div className="star-streaks">
         <div className="star-streak" style={{ left: '10%', height: 80, opacity: 0.2, animationDuration: '0.7s' }} />
@@ -203,12 +204,8 @@ export default function Home() {
             className="scene-text delay-2 gradient-text font-extrabold text-center"
             style={{ fontSize: 'clamp(36px, 7vw, 80px)' }}
           >
-            Take the Aghaaz Flight
+            Helping Matric & FSc students score better
           </h1>
-
-          <p className="scene-text delay-3 text-2xl md:text-3xl urdu-text">
-            آغاز کی پرواز
-          </p>
 
           <div className="scene-text delay-4 mt-8 flex justify-center">
             <div className="name-input-row flex items-center gap-3">
@@ -305,18 +302,32 @@ export default function Home() {
             ہر ٹاپک۔ دس منٹ کے آسان سبق میں۔
           </p>
 
-          <div className="scene-text delay-4 bar-visual mt-10 max-w-md mx-auto space-y-4">
-            <div>
-              <div className="bar-long rounded h-3 w-full border border-red-500/40" style={{ background: 'rgba(239, 68, 68, 0.85)' }} />
-              <p className="bar-label text-white/75 text-xs mt-1">40 min lecture</p>
+          <div className="scene-text delay-4 bar-visual mt-10 max-w-lg mx-auto">
+            <div className="glass-card rounded-2xl p-6 sm:p-8 border-white/5">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-8">
+                {/* Before */}
+                <div className="w-full sm:w-[45%] text-center sm:text-left">
+                  <p className="bar-label text-white/50 text-[10px] uppercase tracking-wider mb-2">Before</p>
+                  <div className="bar-long rounded-lg h-4 w-full border border-red-500/50 shadow-inner" style={{ background: 'rgba(239, 68, 68, 0.9)' }} />
+                  <p className="bar-label text-white/70 text-xs mt-2 font-medium">40 min lecture</p>
+                </div>
+
+                <div className="flex-shrink-0 text-[#BFFF00]/50 text-2xl hidden sm:block" aria-hidden>→</div>
+                <div className="flex sm:hidden text-[#BFFF00]/40 text-lg">↓</div>
+
+                {/* After — Aghaaz */}
+                <div className="w-full sm:w-[45%] text-center sm:text-left">
+                  <p className="bar-label text-[#BFFF00]/80 text-[10px] uppercase tracking-wider mb-2">With Aghaaz</p>
+                  <div className="bar-short-row flex gap-2 justify-center sm:justify-start">
+                    <div className="bar-short bar-short-glow rounded-lg h-4 w-[23%] min-w-[48px] bg-[#BFFF00]" />
+                    <div className="bar-short bar-short-glow rounded-lg h-4 w-[23%] min-w-[48px] bg-[#BFFF00]" />
+                    <div className="bar-short bar-short-glow rounded-lg h-4 w-[23%] min-w-[48px] bg-[#BFFF00]" />
+                    <div className="bar-short bar-short-glow rounded-lg h-4 w-[23%] min-w-[48px] bg-[#BFFF00]" />
+                  </div>
+                  <p className="bar-label text-white/70 text-xs mt-2 font-medium">10 min each · 4 lessons</p>
+                </div>
+              </div>
             </div>
-            <div className="bar-short-row flex gap-2">
-              <div className="bar-short bg-[#BFFF00] rounded h-3 w-[23%]" />
-              <div className="bar-short bg-[#BFFF00] rounded h-3 w-[23%]" />
-              <div className="bar-short bg-[#BFFF00] rounded h-3 w-[23%]" />
-              <div className="bar-short bg-[#BFFF00] rounded h-3 w-[23%]" />
-            </div>
-            <p className="bar-label text-white/75 text-xs">10 min each</p>
           </div>
         </div>
       </section>
@@ -442,7 +453,6 @@ export default function Home() {
             <div className="scene-text delay-4 chat-mockup flex-1 glass-card rounded-2xl p-6 text-left space-y-4">
               <p className="text-white/50 text-xs tracking-wide uppercase mb-1">English</p>
               <p className="text-[#BFFF00] text-xs tracking-wide">⚡ Blitz</p>
-              <p className="text-[#BFFF00]/70 text-[10px] tracking-wide urdu-text mt-0.5">بلٹز</p>
 
               <div className="flex justify-end chat-bubble">
                 <div className="bg-white/10 rounded-2xl rounded-br-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
@@ -464,7 +474,6 @@ export default function Home() {
             <div className="scene-text delay-4 chat-mockup flex-1 glass-card rounded-2xl p-6 text-left space-y-4">
               <p className="text-white/50 text-xs tracking-wide uppercase mb-1">Urdu</p>
               <p className="text-[#BFFF00] text-xs tracking-wide">⚡ Blitz</p>
-              <p className="text-[#BFFF00]/70 text-[10px] tracking-wide mt-0.5">Blitz</p>
 
               <div className="flex justify-end chat-bubble">
                 <div className="bg-white/10 rounded-2xl rounded-br-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
@@ -490,7 +499,6 @@ export default function Home() {
               <div className="scene-text delay-4 chat-mockup h-full glass-card rounded-2xl p-5 text-left space-y-3">
                 <p className="text-white/50 text-xs tracking-wide uppercase mb-1">English</p>
                 <p className="text-[#BFFF00] text-xs tracking-wide">⚡ Blitz</p>
-                <p className="text-[#BFFF00]/70 text-[10px] tracking-wide urdu-text mt-0.5">بلٹز</p>
                 <div className="flex justify-end chat-bubble">
                   <div className="bg-white/10 rounded-2xl rounded-br-md py-2.5 px-4 text-white/90 max-w-[85%] text-sm">I don&apos;t understand Newton&apos;s third law</div>
                 </div>
@@ -506,7 +514,6 @@ export default function Home() {
               <div className="scene-text delay-4 chat-mockup h-full glass-card rounded-2xl p-5 text-left space-y-3">
                 <p className="text-white/50 text-xs tracking-wide uppercase mb-1">Urdu</p>
                 <p className="text-[#BFFF00] text-xs tracking-wide">⚡ Blitz</p>
-                <p className="text-[#BFFF00]/70 text-[10px] tracking-wide mt-0.5">Blitz</p>
                 <div className="flex justify-end chat-bubble">
                   <div className="bg-white/10 rounded-2xl rounded-br-md py-2.5 px-4 text-white/90 max-w-[85%] text-sm">mujhe newton ka teesra law samajh nahi araha</div>
                 </div>
@@ -614,62 +621,7 @@ export default function Home() {
                 className="w-full h-full object-cover"
               />
 
-              {/* Quiz overlay — fixed full-viewport on mobile so it's never clipped */}
-              {activeQuiz && (
-                <div className="fixed inset-0 md:absolute flex items-center justify-center bg-black/85 backdrop-blur-sm z-50 p-4 md:p-0">
-                  <div className="rounded-2xl border border-[#BFFF00]/15 bg-[#0a1a0f]/95 backdrop-blur-xl p-5 sm:p-8 max-w-sm w-full md:w-[90%] text-left max-h-[90vh] md:max-h-none overflow-y-auto shadow-2xl shadow-black/40">
-                    <p className="text-[#BFFF00] text-xs tracking-wide uppercase mb-1">Checkpoint Quiz</p>
-                    <p className="text-lg sm:text-xl font-semibold text-white mb-5">
-                      {activeQuiz.checkpoint.question}
-                    </p>
-                    <div className="space-y-3">
-                      {activeQuiz.checkpoint.options.map((opt, i) => {
-                        const selected = activeQuiz.selectedIndex === i;
-                        const correct = i === activeQuiz.checkpoint.correctIndex;
-                        const answered = activeQuiz.selectedIndex !== null;
-
-                        let btnClass =
-                          'w-full text-left py-3 px-5 rounded-xl border transition-all duration-200 text-sm sm:text-base ';
-                        if (answered && selected && activeQuiz.isCorrect) {
-                          btnClass += 'bg-[#BFFF00]/15 border-[#BFFF00] text-[#BFFF00]';
-                        } else if (answered && selected && !activeQuiz.isCorrect) {
-                          btnClass += 'bg-red-500/15 border-red-500/50 text-red-400';
-                        } else if (answered && correct) {
-                          btnClass += 'bg-[#BFFF00]/15 border-[#BFFF00] text-[#BFFF00]';
-                        } else {
-                          btnClass +=
-                            'bg-white/5 border-white/10 text-white hover:border-[#BFFF00]/50 hover:bg-[#BFFF00]/5';
-                        }
-
-                        return (
-                          <button
-                            key={i}
-                            className={btnClass}
-                            disabled={answered}
-                            onClick={() =>
-                              handleAnswer(activeQuiz.checkpoint, i)
-                            }
-                          >
-                            {opt}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {activeQuiz.selectedIndex !== null && (
-                      <p
-                        className={`mt-4 text-sm font-medium ${
-                          activeQuiz.isCorrect ? 'text-[#BFFF00]' : 'text-red-400'
-                        }`}
-                      >
-                        {activeQuiz.isCorrect
-                          ? '✓ Correct!'
-                          : activeQuiz.checkpoint.explanation}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
+              {/* Quiz overlay rendered outside <main> to escape 3D containing block */}
             </div>
           </div>
 
@@ -791,5 +743,60 @@ export default function Home() {
         </div>
       </section>
     </main>
+
+      {activeQuiz && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black/85 backdrop-blur-sm z-[9999] p-4">
+          <div className="rounded-2xl border border-[#BFFF00]/15 bg-[#0a1a0f]/95 backdrop-blur-xl p-5 sm:p-8 max-w-sm w-full text-left max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/40">
+            <p className="text-[#BFFF00] text-xs tracking-wide uppercase mb-1">Checkpoint Quiz</p>
+            <p className="text-lg sm:text-xl font-semibold text-white mb-5">
+              {activeQuiz.checkpoint.question}
+            </p>
+            <div className="space-y-3">
+              {activeQuiz.checkpoint.options.map((opt, i) => {
+                const selected = activeQuiz.selectedIndex === i;
+                const correct = i === activeQuiz.checkpoint.correctIndex;
+                const answered = activeQuiz.selectedIndex !== null;
+
+                let btnClass =
+                  'w-full text-left py-3 px-5 rounded-xl border transition-all duration-200 text-sm sm:text-base ';
+                if (answered && selected && activeQuiz.isCorrect) {
+                  btnClass += 'bg-[#BFFF00]/15 border-[#BFFF00] text-[#BFFF00]';
+                } else if (answered && selected && !activeQuiz.isCorrect) {
+                  btnClass += 'bg-red-500/15 border-red-500/50 text-red-400';
+                } else if (answered && correct) {
+                  btnClass += 'bg-[#BFFF00]/15 border-[#BFFF00] text-[#BFFF00]';
+                } else {
+                  btnClass +=
+                    'bg-white/5 border-white/10 text-white hover:border-[#BFFF00]/50 hover:bg-[#BFFF00]/5';
+                }
+
+                return (
+                  <button
+                    key={i}
+                    className={btnClass}
+                    disabled={answered}
+                    onClick={() => handleAnswer(activeQuiz.checkpoint, i)}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+
+            {activeQuiz.selectedIndex !== null && (
+              <p
+                className={`mt-4 text-sm font-medium ${
+                  activeQuiz.isCorrect ? 'text-[#BFFF00]' : 'text-red-400'
+                }`}
+              >
+                {activeQuiz.isCorrect
+                  ? '✓ Correct!'
+                  : activeQuiz.checkpoint.explanation}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
