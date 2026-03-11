@@ -1,10 +1,117 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import Hls from 'hls.js';
+
+const VIDEO_SRC =
+  'https://vz-dfa24d6f-377.b-cdn.net/e493608b-e018-4a40-8938-a6960e7d3eb6/playlist.m3u8';
+const THUMBNAIL_URL =
+  'https://vz-dfa24d6f-377.b-cdn.net/e493608b-e018-4a40-8938-a6960e7d3eb6/thumbnail.jpg';
+
+const CHECKPOINTS = [
+  {
+    id: 'q1',
+    timestamp: 42,
+    question: 'Which operator will be solved first?',
+    options: ['Addition', 'Multiplication'],
+    correctIndex: 1,
+    explanation: 'Not quite — the answer is Multiplication.',
+  },
+] as const;
+
+type ActiveQuiz = {
+  checkpoint: (typeof CHECKPOINTS)[number];
+  selectedIndex: number | null;
+  isCorrect: boolean | null;
+} | null;
 
 export default function Home() {
   const [name, setName] = useState('');
 
+  // Video player state
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const hlsRef = useRef<Hls | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [duration, setDuration] = useState<number | null>(null);
+  const [answeredIds, setAnsweredIds] = useState<Set<string>>(new Set());
+  const [activeQuiz, setActiveQuiz] = useState<ActiveQuiz>(null);
+
+  const answeredCount = answeredIds.size;
+  const checkpointProgress =
+    CHECKPOINTS.length > 0 ? (answeredCount / CHECKPOINTS.length) * 100 : 0;
+
+  const getCheckpointPosition = useCallback(
+    (timestamp: number) => {
+      if (!duration || duration <= 0) return 0;
+      return Math.min(Math.max((timestamp / duration) * 100, 0), 100);
+    },
+    [duration]
+  );
+
+  // HLS init
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onMeta = () => setDuration(video.duration);
+    video.addEventListener('loadedmetadata', onMeta);
+
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(VIDEO_SRC);
+      hls.attachMedia(video);
+      hlsRef.current = hls;
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = VIDEO_SRC;
+    }
+
+    return () => {
+      video.removeEventListener('loadedmetadata', onMeta);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, []);
+
+  // Checkpoint detection via timeupdate
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onTimeUpdate = () => {
+      if (activeQuiz) return;
+      const ct = video.currentTime;
+      const hit = CHECKPOINTS.find(
+        (cp) => !answeredIds.has(cp.id) && ct >= cp.timestamp
+      );
+      if (hit) {
+        video.pause();
+        setActiveQuiz({ checkpoint: hit, selectedIndex: null, isCorrect: null });
+      }
+    };
+
+    video.addEventListener('timeupdate', onTimeUpdate);
+    return () => video.removeEventListener('timeupdate', onTimeUpdate);
+  }, [answeredIds, activeQuiz]);
+
+  const handleAnswer = (
+    checkpoint: (typeof CHECKPOINTS)[number],
+    index: number
+  ) => {
+    const correct = index === checkpoint.correctIndex;
+    setActiveQuiz({ checkpoint, selectedIndex: index, isCorrect: correct });
+    setAnsweredIds((prev) => new Set(prev).add(checkpoint.id));
+
+    const delay = correct ? 1500 : 2000;
+    timeoutRef.current = setTimeout(() => {
+      setActiveQuiz(null);
+      videoRef.current?.play().catch(() => {});
+    }, delay);
+  };
+
+  // Scene scroll animations
   useEffect(() => {
     const isMobile = window.innerWidth < 640;
     const observer = new IntersectionObserver(
@@ -29,6 +136,7 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
+  // Scroll effects (streaks + glow)
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     const streaks = document.querySelector('.star-streaks');
@@ -403,7 +511,7 @@ export default function Home() {
         data-scene="6"
         className="min-h-screen flex items-center justify-center relative px-6"
       >
-        <div className="text-center max-w-[90%] md:max-w-[900px]">
+        <div className="text-center max-w-[90%] md:max-w-[900px] w-full">
           <div className="scene-text delay-1">
             <p className="eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-1">
               TRY IT NOW
@@ -421,24 +529,122 @@ export default function Home() {
             دیکھو آغاز کا سبق کیسا ہوتا ہے۔
           </p>
 
-          <div className="scene-text delay-3 demo-container w-full max-w-3xl mx-auto mt-8 rounded-2xl overflow-hidden border border-white/10 shadow-2xl shadow-black/50">
-            <a
-              href="http://localhost:3001"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block bg-white/5 hover:bg-white/[0.07] transition-colors"
-            >
-              <div className="flex flex-col items-center justify-center aspect-video">
-                <div className="w-16 h-16 rounded-full bg-[#BFFF00]/10 border border-[#BFFF00]/30 flex items-center justify-center mb-4">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="#BFFF00">
-                    <polygon points="8,5 20,12 8,19" />
-                  </svg>
+          {/* Header bar above video */}
+          <div className="scene-text delay-3 w-full max-w-3xl mx-auto mt-8">
+            <div className="flex items-center justify-between mb-3">
+              <span className="font-ethnocentric bg-[#04160c] border border-white/5 text-white text-[10px] tracking-wide px-3 py-1.5 rounded-full">
+                AGHAAZ
+              </span>
+              <span className="text-[#BFFF00] border border-[#BFFF00]/30 bg-[#BFFF00]/5 text-xs px-3 py-1 rounded-full">
+                9th Computer Science
+              </span>
+            </div>
+            <p className="text-left text-white/80 text-sm mb-0.5">Hassam Explains Binary Conversion</p>
+            <p className="text-left text-white/40 text-xs mb-3">Lesson 1 · Chapter 1: Introduction to Computers</p>
+          </div>
+
+          {/* Video container */}
+          <div className="scene-text delay-3 demo-container w-full max-w-3xl mx-auto rounded-xl overflow-hidden border border-white/5 bg-[#04160c] shadow-2xl shadow-black/50 relative">
+            <div className="relative aspect-video">
+              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+              <video
+                ref={videoRef}
+                poster={THUMBNAIL_URL}
+                controls
+                playsInline
+                className="w-full h-full object-cover"
+              />
+
+              {/* Quiz overlay */}
+              {activeQuiz && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/85 backdrop-blur-sm z-30">
+                  <div className="rounded-2xl border border-[#BFFF00]/15 bg-[#0a1a0f]/95 p-6 sm:p-8 max-w-sm w-[90%] text-left">
+                    <p className="text-[#BFFF00] text-xs tracking-wide uppercase mb-1">Checkpoint Quiz</p>
+                    <p className="text-lg sm:text-xl font-semibold text-white mb-5">
+                      {activeQuiz.checkpoint.question}
+                    </p>
+                    <div className="space-y-3">
+                      {activeQuiz.checkpoint.options.map((opt, i) => {
+                        const selected = activeQuiz.selectedIndex === i;
+                        const correct = i === activeQuiz.checkpoint.correctIndex;
+                        const answered = activeQuiz.selectedIndex !== null;
+
+                        let btnClass =
+                          'w-full text-left py-3 px-5 rounded-xl border transition-all duration-200 text-sm sm:text-base ';
+                        if (answered && selected && activeQuiz.isCorrect) {
+                          btnClass += 'bg-[#BFFF00]/15 border-[#BFFF00] text-[#BFFF00]';
+                        } else if (answered && selected && !activeQuiz.isCorrect) {
+                          btnClass += 'bg-red-500/15 border-red-500/50 text-red-400';
+                        } else if (answered && correct) {
+                          btnClass += 'bg-[#BFFF00]/15 border-[#BFFF00] text-[#BFFF00]';
+                        } else {
+                          btnClass +=
+                            'bg-white/5 border-white/10 text-white hover:border-[#BFFF00]/50 hover:bg-[#BFFF00]/5';
+                        }
+
+                        return (
+                          <button
+                            key={i}
+                            className={btnClass}
+                            disabled={answered}
+                            onClick={() =>
+                              handleAnswer(activeQuiz.checkpoint, i)
+                            }
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {activeQuiz.selectedIndex !== null && (
+                      <p
+                        className={`mt-4 text-sm font-medium ${
+                          activeQuiz.isCorrect ? 'text-[#BFFF00]' : 'text-red-400'
+                        }`}
+                      >
+                        {activeQuiz.isCorrect
+                          ? '✓ Correct!'
+                          : activeQuiz.checkpoint.explanation}
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <p className="text-[#BFFF00] text-sm font-medium">
-                  ▶ Watch a 2-minute demo lesson
-                </p>
-              </div>
-            </a>
+              )}
+            </div>
+          </div>
+
+          {/* Checkpoint progress bar */}
+          <div className="scene-text delay-4 w-full max-w-3xl mx-auto mt-4">
+            <div className="flex items-center justify-between text-white/40 text-xs mb-2">
+              <span>Checkpoint progress</span>
+              <span>{answeredCount} / {CHECKPOINTS.length} answered</span>
+            </div>
+            <div className="relative h-1.5 bg-white/5 rounded-full w-full">
+              <div
+                className="absolute inset-y-0 left-0 bg-[#BFFF00]/30 rounded-full transition-all duration-500"
+                style={{ width: `${checkpointProgress}%` }}
+              />
+              {CHECKPOINTS.map((cp) => {
+                const pos = getCheckpointPosition(cp.timestamp);
+                const done = answeredIds.has(cp.id);
+                return (
+                  <div
+                    key={cp.id}
+                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2"
+                    style={{ left: `${pos}%` }}
+                  >
+                    <div
+                      className={`w-2.5 h-2.5 rotate-45 border ${
+                        done
+                          ? 'bg-[#BFFF00] border-[#BFFF00]'
+                          : 'bg-transparent border-white/30'
+                      }`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div className="scene-text delay-4 demo-note mt-4">
