@@ -1,344 +1,148 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import Hls from 'hls.js';
+import EmbeddedDemo from './components/EmbeddedDemo';
 
 const TOTAL_SCENES = 8;
 
-// --- DEMO ENGINE CONSTANTS ---
-const VIDEO_SRC = 'https://vz-dfa24d6f-377.b-cdn.net/e493608b-e018-4a40-8938-a6960e7d3eb6/playlist.m3u8';
-const THUMBNAIL_URL = 'https://vz-dfa24d6f-377.b-cdn.net/e493608b-e018-4a40-8938-a6960e7d3eb6/thumbnail.jpg';
-
-const CHECKPOINTS = [
-  {
-    id: 'q1',
-    timestamp: 42,
-    question: 'Which operator will be solved first?',
-    options: ['Addition', 'Multiplication'],
-    correctIndex: 1,
-    explanation: 'Not quite — the answer is Multiplication.',
-  },
+const SCENE_NAMES = [
+  'Intro',
+  'The Problem',
+  'The Fix',
+  'Quizzes',
+  'Blitz AI',
+  'Pricing',
+  'Try It',
+  'Get Started',
 ] as const;
-
-type Checkpoint = (typeof CHECKPOINTS)[number];
-type BlitzMessage = { role: 'blitz' | 'system'; content: string; };
-
-function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
-}
-
-// --- INLINE EMBEDDED DEMO COMPONENT ---
-// Notice the new isActive prop. This prevents the video from loading until Scene 6.
-function EmbeddedDemo({ lang, isActive }: { lang: 'en' | 'ur', isActive: boolean }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const hlsRef = useRef<Hls | null>(null);
-  const [hasStarted, setHasStarted] = useState(false);
-  const [duration, setDuration] = useState<number | null>(null);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [answeredIds, setAnsweredIds] = useState<Set<string>>(new Set());
-  const [lessonComplete, setLessonComplete] = useState(false);
-
-  const [activeCheckpoint, setActiveCheckpoint] = useState<Checkpoint | null>(null);
-  const [quizResult, setQuizResult] = useState<'correct' | 'wrong' | null>(null);
-  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
-
-  const [messages, setMessages] = useState<BlitzMessage[]>([
-    { role: 'blitz', content: lang === 'en' ? "Hey! I'm Blitz ⚡ I'll be here during your lesson. When a quiz pops up, answer it and I'll help if you get stuck. Let's go!" : "ہیلو! میں بلٹز ہوں ⚡ میں آپ کے سبق کے دوران یہاں رہوں گا۔ جب کوئی کوئز آئے تو اس کا جواب دیں، میں مدد کروں گا!" },
-  ]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showContinue, setShowContinue] = useState(false);
-  const chatScrollRef = useRef<HTMLDivElement>(null);
-
-  const progress = duration && duration > 0 ? (currentTime / duration) * 100 : 0;
-
-  const getCheckpointPosition = useCallback((timestamp: number) => {
-    if (!duration || duration <= 0) return 0;
-    return Math.min(Math.max((timestamp / duration) * 100, 0), 100);
-  }, [duration]);
-
-  const scrollChat = useCallback(() => {
-    setTimeout(() => {
-      chatScrollRef.current?.scrollTo({ top: chatScrollRef.current.scrollHeight, behavior: 'smooth' });
-    }, 100);
-  }, []);
-
-  // PERFORMANCE FIX: Only initialize HLS when the user actually reaches Scene 6
-  useEffect(() => {
-    if (!isActive) return;
-
-    const video = videoRef.current;
-    if (!video) return;
-
-    const onMeta = () => setDuration(video.duration);
-    const onTime = () => setCurrentTime(video.currentTime);
-    const onEnded = () => {
-      setLessonComplete(true);
-      setMessages((prev) => [...prev, { role: 'system', content: lang === 'en' ? '🎉 Lesson complete!' : '🎉 سبق مکمل ہو گیا!' }]);
-      scrollChat();
-    };
-
-    video.addEventListener('loadedmetadata', onMeta);
-    video.addEventListener('timeupdate', onTime);
-    video.addEventListener('ended', onEnded);
-
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(VIDEO_SRC);
-      hls.attachMedia(video);
-      hlsRef.current = hls;
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = VIDEO_SRC;
-    }
-
-    return () => {
-      video.removeEventListener('loadedmetadata', onMeta);
-      video.removeEventListener('timeupdate', onTime);
-      video.removeEventListener('ended', onEnded);
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
-  }, [scrollChat, lang, isActive]);
-
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || activeCheckpoint || !hasStarted) return;
-
-    const handler = () => {
-      const ct = video.currentTime;
-      const hit = CHECKPOINTS.find((cp) => !answeredIds.has(cp.id) && ct >= cp.timestamp);
-      if (hit) {
-        video.pause();
-        setActiveCheckpoint(hit);
-        setMessages((prev) => [...prev, { role: 'system', content: lang === 'en' ? '📋 Checkpoint reached — answer the question!' : '📋 چیک پوائنٹ آ گیا — سوال کا جواب دیں!' }]);
-        scrollChat();
-      }
-    };
-
-    video.addEventListener('timeupdate', handler);
-    return () => video.removeEventListener('timeupdate', handler);
-  }, [answeredIds, activeCheckpoint, scrollChat, hasStarted, lang]);
-
-  const handleStartDemo = () => {
-    setHasStarted(true);
-    setTimeout(() => {
-      if (videoRef.current) {
-        videoRef.current.play().catch(() => {});
-      }
-    }, 400);
-  };
-
-  async function handleAnswer(index: number, checkpoint: Checkpoint) {
-    const isCorrect = index === checkpoint.correctIndex;
-    const studentAnswer = checkpoint.options[index];
-    const correctAnswer = checkpoint.options[checkpoint.correctIndex];
-
-    setSelectedIdx(index);
-    setQuizResult(isCorrect ? 'correct' : 'wrong');
-
-    setTimeout(() => {
-      setActiveCheckpoint(null);
-      setQuizResult(null);
-      setSelectedIdx(null);
-    }, 600);
-
-    setAnsweredIds((prev) => new Set(prev).add(checkpoint.id));
-    setIsLoading(true);
-    scrollChat();
-
-    try {
-      const res = await fetch('/api/blitz', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: isCorrect ? 'correct' : 'wrong', question: checkpoint.question, studentAnswer, correctAnswer, lessonContext: 'Computer Science 9th class' }),
-      });
-      const data = await res.json();
-      setMessages((prev) => [...prev, { role: 'blitz', content: data.message }]);
-    } catch {
-      setMessages((prev) => [...prev, { role: 'blitz', content: isCorrect ? 'Nice work! 🎯' : `Good try! The correct answer is "${correctAnswer}". Keep going!` }]);
-    }
-
-    setIsLoading(false);
-    scrollChat();
-
-    if (isCorrect) {
-      setTimeout(() => {
-        videoRef.current?.play().catch(() => {});
-        setMessages((prev) => [...prev, { role: 'system', content: '▶ Video resumed' }]);
-        scrollChat();
-      }, 2000);
-    } else {
-      setShowContinue(true);
-    }
-  }
-
-  function handleContinue() {
-    setShowContinue(false);
-    videoRef.current?.play().catch(() => {});
-    setMessages((prev) => [...prev, { role: 'system', content: '▶ Video resumed' }]);
-    scrollChat();
-  }
-
-  function handleTimelineClick(e: React.MouseEvent<HTMLDivElement>) {
-    if (!videoRef.current || !duration || !hasStarted) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const fraction = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    videoRef.current.currentTime = fraction * duration;
-  }
-
-  if (lessonComplete) {
-    return (
-      <div className="w-full glass-card rounded-[2rem] p-8 md:p-12 text-center max-w-3xl mx-auto flex flex-col items-center gap-4 border border-[#BFFF00]/30 shadow-[0_0_40px_rgba(191,255,0,0.15)] animate-in fade-in zoom-in duration-500">
-        <p className="text-5xl md:text-6xl mb-4">🎉</p>
-        <h1 className="text-2xl md:text-4xl font-bold text-white">
-          {lang === 'en' ? 'Lesson Complete!' : 'سبق مکمل ہو گیا!'}
-        </h1>
-        <p className="text-white/50 text-sm md:text-base mb-6 font-medium">
-          {lang === 'en' 
-            ? `You successfully answered ${answeredIds.size} / ${CHECKPOINTS.length} checkpoints.` 
-            : `آپ نے کامیابی سے ${answeredIds.size} / ${CHECKPOINTS.length} چیک پوائنٹس کے جواب دیے۔`}
-        </p>
-        <button onClick={() => {
-          const nextBtn = document.querySelector('.story-next-btn') as HTMLButtonElement;
-          if(nextBtn) nextBtn.click();
-        }} className="primary-pill-btn px-8 py-4 w-full md:w-auto text-base md:text-lg">
-          {lang === 'en' ? 'Continue to Pricing →' : 'قیمتوں کی طرف بڑھیں →'}
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className={`w-full max-w-6xl h-[70vh] md:h-[75vh] rounded-[2rem] relative overflow-hidden transition-all duration-1000 ease-[cubic-bezier(0.25,1,0.5,1)] ${hasStarted ? 'lesson-container border border-white/10 shadow-[0_0_80px_rgba(191,255,0,0.1)]' : 'bg-transparent'}`}>
-      
-      {/* Galaxy Button State (Before Start) */}
-      <div className={`absolute inset-0 z-50 flex items-center justify-center transition-all duration-700 ease-in-out ${hasStarted ? 'opacity-0 scale-110 pointer-events-none' : 'opacity-100 scale-100'}`}>
-        <div className="relative flex items-center justify-center">
-          {/* Intense Core Aura */}
-          <div className="absolute w-[200px] h-[100px] md:w-[450px] md:h-[200px] bg-[#BFFF00] opacity-30 blur-[60px] md:blur-[80px] rounded-full animate-pulse pointer-events-none"></div>
-          
-          <button 
-            onClick={handleStartDemo} 
-            className="demo-galaxy-btn relative z-10 bg-[#BFFF00] text-[#041a0e] font-extrabold px-12 py-5 md:px-16 md:py-6 rounded-full text-xl md:text-3xl tracking-tight transition-all duration-300 hover:scale-105"
-          >
-            {lang === 'en' ? 'Try Aghaaz' : 'آغاز آزمائیں'}
-          </button>
-        </div>
-      </div>
-
-      {/* The Actual Player State (After Start) */}
-      <div className={`w-full h-full flex flex-col md:flex-row transition-all duration-1000 delay-100 ease-[cubic-bezier(0.25,1,0.5,1)] ${!hasStarted ? 'opacity-0 scale-95 pointer-events-none blur-sm' : 'opacity-100 scale-100 blur-0'}`}>
-        
-        {/* Video Panel */}
-        <div className="video-panel flex-7 p-4 md:p-6 flex flex-col relative min-w-0 w-full md:w-[70%]">
-          <div className="lesson-header flex items-center justify-between mb-3 md:mb-4 pr-2 md:pr-4">
-            <div className="lesson-badge font-ethnocentric bg-[#074C2B] text-[#BFFF00] text-[9px] md:text-[11px] font-bold tracking-[0.1em] px-2 py-1 md:px-3 md:py-1.5 rounded-md">AGHAAZ</div>
-            <div className="lesson-info flex-1 ml-3 md:ml-4 min-w-0">
-              <p className="lesson-title text-white text-[13px] md:text-[15px] font-semibold truncate">Hassam Explains Binary Conversion</p>
-              <p className="lesson-subtitle text-white/40 text-[10px] md:text-[12px] truncate">Lesson 1 · Chapter 1: Introduction to Computers</p>
-            </div>
-            <div className="hidden sm:block lesson-subject-badge border border-[#BFFF00]/30 text-[#BFFF00] text-[10px] md:text-[11px] px-2 py-1 md:px-3 md:py-1.5 rounded-full whitespace-nowrap">9th Computer Science</div>
-          </div>
-
-          <div className="video-wrapper relative w-full flex-1 min-h-[200px] md:min-h-0 rounded-xl overflow-hidden bg-black flex items-center justify-center shadow-2xl">
-            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-            <video ref={videoRef} poster={THUMBNAIL_URL} controls={false} playsInline className="w-full h-full object-contain" />
-            
-            {activeCheckpoint && hasStarted && (
-              <div className="quiz-overlay absolute inset-0 bg-black/85 flex items-center justify-center z-10 backdrop-blur-sm p-4">
-                <div className="quiz-card-overlay bg-[#0a1a0f]/95 border border-[#BFFF00]/20 rounded-2xl md:rounded-3xl p-6 md:p-8 max-w-[450px] w-[95%] shadow-[0_20px_60px_rgba(0,0,0,0.6)] animate-in fade-in slide-in-from-bottom-4 duration-300 text-left overflow-y-auto max-h-[90%]">
-                  <p className="quiz-eyebrow text-[#BFFF00] text-[10px] md:text-[11px] uppercase tracking-[0.1em] font-bold mb-3 md:mb-4">⚡ Checkpoint Quiz</p>
-                  <p className="quiz-question text-white text-lg md:text-xl font-bold mb-4 md:mb-6 leading-tight">{activeCheckpoint.question}</p>
-                  <div className="quiz-options flex flex-col gap-2 md:gap-3">
-                    {activeCheckpoint.options.map((option, i) => (
-                      <button
-                        key={i}
-                        className={`quiz-option w-full text-left p-3 md:p-4 bg-white/5 border border-white/10 rounded-xl md:rounded-2xl text-white/90 text-[13px] md:text-[15px] font-medium transition-all duration-200 ${quizResult !== null ? (i === activeCheckpoint.correctIndex ? '!bg-[#BFFF00]/20 !border-[#BFFF00] !text-[#BFFF00]' : quizResult === 'wrong' && i === selectedIdx ? '!bg-red-500/20 !border-red-500 !text-red-500' : '') : 'hover:bg-white/10 hover:border-[#BFFF00]/50'}`}
-                        onClick={() => { if (quizResult === null) handleAnswer(i, activeCheckpoint); }}
-                        disabled={quizResult !== null}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="timeline-container mt-3 md:mt-4 flex-shrink-0">
-            <div className="timeline-bar w-full h-[6px] bg-white/10 rounded-full relative cursor-pointer hover:h-[8px] transition-all" onClick={handleTimelineClick}>
-              <div className="timeline-progress h-full bg-[#BFFF00] rounded-full transition-all duration-100 linear shadow-[0_0_10px_rgba(191,255,0,0.5)]" style={{ width: `${progress}%` }} />
-              {CHECKPOINTS.map((cp) => {
-                const pos = getCheckpointPosition(cp.timestamp);
-                const done = answeredIds.has(cp.id);
-                const isActive = activeCheckpoint?.id === cp.id;
-                return <div key={cp.id} className={`timeline-checkpoint absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-[10px] h-[10px] md:w-[12px] md:h-[12px] border-[2px] md:border-[3px] border-[#BFFF00] transition-all duration-300 z-10 rounded-full ${done ? 'bg-[#BFFF00]' : 'bg-black'} ${isActive ? 'scale-150 shadow-[0_0_15px_rgba(191,255,0,0.8)] bg-[#BFFF00]' : ''}`} style={{ left: `${pos}%` }} />;
-              })}
-            </div>
-            <div className="timeline-meta flex justify-between mt-2 md:mt-3 text-[10px] md:text-[11px] text-white/40 font-medium">
-              <span>{formatTime(currentTime)}</span>
-              <span>{answeredIds.size} / {CHECKPOINTS.length} checkpoints</span>
-              <span>{duration ? formatTime(duration) : '--:--'}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Blitz Panel */}
-        <div className="blitz-panel flex-3 flex flex-col border-t md:border-t-0 md:border-l border-white/10 bg-[#0a0a0a]/50 w-full md:w-[30%]">
-          <div className="blitz-header flex items-center gap-3 md:gap-4 p-4 md:p-6 border-b border-white/5">
-            <div className="blitz-avatar w-8 h-8 md:w-10 md:h-10 bg-[#BFFF00]/10 border border-[#BFFF00]/20 rounded-lg md:rounded-xl flex items-center justify-center text-lg md:text-xl shadow-[0_0_15px_rgba(191,255,0,0.1)]">⚡</div>
-            <div>
-              <p className="blitz-name text-[#BFFF00] font-bold text-[13px] md:text-[14px]">Blitz</p>
-              <p className="blitz-status text-white/40 text-[11px] md:text-[12px] font-medium">AI Tutor</p>
-            </div>
-          </div>
-          <div className="blitz-chat flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-4 scrollbar-hide" ref={chatScrollRef}>
-            {messages.map((msg, i) => (
-              <div key={i} className={`blitz-message flex gap-2 md:gap-3 items-start animate-in fade-in slide-in-from-bottom-2 duration-300 ${msg.role === 'system' ? 'justify-center' : ''}`}>
-                {msg.role === 'blitz' && <span className="blitz-msg-avatar w-6 h-6 md:w-7 md:h-7 bg-[#BFFF00]/10 rounded-md md:rounded-lg flex items-center justify-center text-[10px] md:text-[12px] mt-1 shrink-0">⚡</span>}
-                <div className={`blitz-msg-bubble ${msg.role === 'system' ? 'bg-transparent text-white/30 text-[10px] md:text-[11px] text-center' : 'bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm px-3 py-2 md:px-4 md:py-3 text-[12px] md:text-[13px] text-white/90 leading-relaxed max-w-[90%]'}`}>
-                  <p>{msg.content}</p>
-                </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="blitz-message flex gap-2 md:gap-3 items-start animate-in fade-in duration-300">
-                <span className="blitz-msg-avatar w-6 h-6 md:w-7 md:h-7 bg-[#BFFF00]/10 rounded-md md:rounded-lg flex items-center justify-center text-[10px] md:text-[12px] mt-1 shrink-0">⚡</span>
-                <div className="blitz-msg-bubble bg-white/5 border border-white/10 rounded-2xl rounded-tl-sm px-3 py-3 md:px-4 md:py-4 max-w-[90%]">
-                  <div className="blitz-typing flex gap-1"><span className="w-1.5 h-1.5 bg-[#BFFF00]/50 rounded-full animate-pulse"></span><span className="w-1.5 h-1.5 bg-[#BFFF00]/50 rounded-full animate-pulse delay-75"></span><span className="w-1.5 h-1.5 bg-[#BFFF00]/50 rounded-full animate-pulse delay-150"></span></div>
-                </div>
-              </div>
-            )}
-          </div>
-          {showContinue && (
-            <div className="blitz-continue p-4 md:p-6 border-t border-white/5 animate-in fade-in duration-300">
-              <button onClick={handleContinue} className="blitz-continue-btn w-full bg-[#BFFF00] text-[#041a0e] font-bold py-3 md:py-3.5 rounded-xl hover:shadow-[0_0_20px_rgba(191,255,0,0.3)] transition-all transform hover:-translate-y-0.5 text-[13px] md:text-[15px]">
-                {lang === 'en' ? 'Continue Lesson →' : 'سبق جاری رکھیں →'}
-              </button>
-            </div>
-          )}
-        </div>
-
-      </div>
-    </div>
-  );
-}
 
 // --- MAIN LANDING PAGE ---
 export default function Home() {
   const [lang, setLang] = useState<'en' | 'ur'>('en');
   const [chatLang, setChatLang] = useState<'en' | 'ur'>('en');
   const [activeScene, setActiveScene] = useState(0);
+  const activeSceneRef = useRef(activeScene);
 
   useEffect(() => {
-    const glowOrb = document.querySelector('.glow-orb');
+    activeSceneRef.current = activeScene;
+  }, [activeScene]);
+
+  const navigateToScene = useCallback((next: number) => {
+    const clamped = Math.max(0, Math.min(TOTAL_SCENES - 1, next));
+    setActiveScene(clamped);
+  }, []);
+
+  useEffect(() => {
+    const isAnimatingRef = { current: false };
+
+    const handleWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target.closest('.blitz-chat') ||
+        target.closest('.quiz-card-overlay')
+      )
+        return;
+
+      e.preventDefault();
+      if (isAnimatingRef.current) return;
+
+      if (Math.abs(e.deltaY) < 10) return;
+
+      isAnimatingRef.current = true;
+
+      const next =
+        e.deltaY > 0
+          ? Math.min(activeSceneRef.current + 1, TOTAL_SCENES - 1)
+          : Math.max(activeSceneRef.current - 1, 0);
+
+      navigateToScene(next);
+
+      setTimeout(() => {
+        isAnimatingRef.current = false;
+      }, 1100);
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: false });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, [navigateToScene]);
+
+  useEffect(() => {
+    let touchStartY = 0;
+    let touchStartTime = 0;
+    const isAnimatingRef = { current: false };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0].clientY;
+      touchStartTime = Date.now();
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (isAnimatingRef.current) return;
+
+      const delta = touchStartY - e.changedTouches[0].clientY;
+      const elapsed = Date.now() - touchStartTime;
+
+      if (Math.abs(delta) < 40) return;
+      if (elapsed > 500) return;
+
+      isAnimatingRef.current = true;
+
+      const next =
+        delta > 0
+          ? Math.min(activeSceneRef.current + 1, TOTAL_SCENES - 1)
+          : Math.max(activeSceneRef.current - 1, 0);
+
+      navigateToScene(next);
+
+      setTimeout(() => {
+        isAnimatingRef.current = false;
+      }, 1100);
+    };
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [navigateToScene]);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+        setActiveScene(prev => Math.min(prev + 1, TOTAL_SCENES - 1));
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+        setActiveScene(prev => Math.max(prev - 1, 0));
+      }
+    };
+
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
+
+  useEffect(() => {
+    const glowOrb = document.querySelector('.glow-orb') as HTMLElement | null;
     if (!glowOrb) return;
-    const zone = activeScene < 2 ? 0 : activeScene < 4 ? 1 : activeScene < 6 ? 2 : 3;
+
+    const zone =
+      activeScene < 2 ? 0 : activeScene < 4 ? 1 : activeScene < 6 ? 2 : 3;
     glowOrb.className = `glow-orb glow-zone-${zone}`;
+
+    const positions: Record<number, { top: string; left: string }> = {
+      0: { top: '45%', left: '50%' },
+      1: { top: '55%', left: '40%' },
+      2: { top: '50%', left: '60%' },
+      3: { top: '40%', left: '45%' },
+      4: { top: '50%', left: '55%' },
+      5: { top: '52%', left: '50%' },
+      6: { top: '45%', left: '58%' },
+      7: { top: '48%', left: '50%' },
+    };
+
+    const pos = positions[activeScene] ?? { top: '50%', left: '50%' };
+    glowOrb.style.top = pos.top;
+    glowOrb.style.left = pos.left;
   }, [activeScene]);
 
   useEffect(() => {
@@ -383,28 +187,55 @@ export default function Home() {
       <main className="relative z-10 w-full h-screen overflow-hidden" style={{ perspective: '1200px' }}>
         <div className="progress-track">
           {Array.from({ length: TOTAL_SCENES }).map((_, i) => (
-            <button key={i} type="button" className={`progress-dot ${i === activeScene ? 'active' : ''}`} onClick={() => setActiveScene(i)} aria-label={`Go to slide ${i + 1}`}/>
+            <div key={i} className="progress-dot-wrap relative group">
+              <button
+                type="button"
+                className={`progress-dot ${i === activeScene ? 'active' : ''}`}
+                onClick={() => navigateToScene(i)}
+                aria-label={`Go to ${SCENE_NAMES[i]}`}
+              />
+              <div className="progress-dot-label absolute right-6 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-white/80 text-[10px] font-semibold tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                {SCENE_NAMES[i]}
+              </div>
+            </div>
           ))}
         </div>
+
+        {activeScene < TOTAL_SCENES - 1 && activeScene !== 6 && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1.5 pointer-events-none">
+            <span className="text-white/30 text-[9px] tracking-[0.3em] uppercase font-bold">
+              {lang === 'en' ? 'scroll' : 'سکرول'}
+            </span>
+            <div className="flex flex-col items-center gap-0.5">
+              <svg className="scroll-chevron scroll-chevron-1" width="18" height="11" viewBox="0 0 20 12" fill="none">
+                <path d="M2 2L10 10L18 2" stroke="#BFFF00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <svg className="scroll-chevron scroll-chevron-2" width="18" height="11" viewBox="0 0 20 12" fill="none">
+                <path d="M2 2L10 10L18 2" stroke="#BFFF00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+          </div>
+        )}
 
         {/* 0. HERO SCENE */}
         <section data-scene="0" className={`scene-wrapper ${activeScene === 0 ? 'scene-active' : 'hidden'}`}>
           <div className="scene-inner text-center flex flex-col items-center justify-center gap-6 md:gap-8 px-4">
             <div className="scene-text delay-1 flex flex-col items-center gap-3 md:gap-4">
               <div className="w-16 h-16 md:w-24 md:h-24 bg-white/[0.02] border border-white/10 rounded-2xl md:rounded-3xl flex items-center justify-center shadow-2xl backdrop-blur-xl">
-                <img src="/aghaaz-logo.png" alt="Aghaaz" className="h-10 md:h-14 object-contain" />
+                <img
+                  src="/aghaaz-logo.png"
+                  alt="Aghaaz"
+                  width={56}
+                  height={56}
+                  className="h-10 md:h-14 object-contain"
+                />
               </div>
               <p className="font-ethnocentric text-[8px] md:text-[10px] tracking-[0.4em] uppercase text-white/50">AGHAAZ</p>
             </div>
             {/* PERFORMANCE/MOBILE FIX: Adjusted text-7xl/100px to smaller breakpoints so it doesn't overflow mobile screens */}
-            <h1 className="scene-text delay-2 text-4xl sm:text-5xl md:text-7xl lg:text-[88px] font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white via-[#BFFF00] to-[#66cc00] tracking-tighter leading-[1.1] md:leading-[1.05] headline-glow max-w-5xl pb-2">
+            <h1 className="scene-text delay-2 animated-headline-gradient text-4xl sm:text-5xl md:text-7xl lg:text-[88px] font-extrabold text-transparent bg-clip-text tracking-tighter leading-[1.1] md:leading-[1.05] headline-glow max-w-5xl pb-2">
               {lang === 'en' ? 'The End of Boring Lectures.' : 'بورنگ لیکچرز کا خاتمہ۔'}
             </h1>
-            <div className="scene-text delay-4 mt-6 md:mt-8">
-              <button onClick={() => setActiveScene(1)} className="primary-pill-btn text-base md:text-lg px-6 py-3 md:px-8 md:py-4">
-                {lang === 'en' ? 'See how it works' : 'دیکھیں یہ کیسے کام کرتا ہے'}
-              </button>
-            </div>
           </div>
         </section>
 
@@ -456,30 +287,29 @@ export default function Home() {
               </h2>
             </div>
             
-            {/* PERFORMANCE/MOBILE FIX: Added flex-col for mobile, grid for desktop */}
-            <div className="scene-text delay-4 w-full flex flex-col md:grid md:grid-cols-3 gap-4 md:gap-6 overflow-y-auto md:overflow-visible max-h-[50vh] md:max-h-none pr-2 md:pr-0">
-              <div className="glass-card rounded-2xl md:rounded-3xl p-6 md:p-8 text-left transition-transform hover:-translate-y-2 hover:border-green-500/30">
-                <div className="inline-block px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-[9px] md:text-[10px] tracking-widest uppercase mb-4 md:mb-6 font-bold">Biology</div>
-                <p className="text-white text-base md:text-lg font-medium mb-4 md:mb-6 leading-snug">What is the powerhouse of the cell?</p>
-                <div className="space-y-2 md:space-y-3">
-                  <div className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 md:py-3.5 md:px-5 text-white/50 text-xs md:text-sm">Nucleus</div>
-                  <div className="bg-green-500/10 border border-green-500/30 rounded-xl py-3 px-4 md:py-3.5 md:px-5 text-green-400 text-xs md:text-sm font-medium flex justify-between items-center shadow-[0_0_15px_rgba(34,197,94,0.1)]">Mitochondria <span>✓</span></div>
+            <div className="scene-text delay-4 w-full grid grid-cols-3 md:grid-cols-3 gap-2 md:gap-6 mt-2 md:mt-4">
+              <div className="glass-card rounded-2xl md:rounded-3xl p-3 md:p-8 text-left transition-transform hover:-translate-y-2 hover:border-green-500/30">
+                <div className="inline-block px-2 py-0.5 md:px-3 md:py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-[9px] md:text-[10px] tracking-widest uppercase mb-2 md:mb-6 font-bold">Biology</div>
+                <p className="text-white text-xs md:text-lg font-medium mb-2 md:mb-6 leading-snug">What is the powerhouse of the cell?</p>
+                <div className="space-y-1.5 md:space-y-3">
+                  <div className="bg-white/5 border border-white/10 rounded-xl py-1.5 px-2 md:py-3.5 md:px-5 text-white/50 text-xs md:text-sm">Nucleus</div>
+                  <div className="bg-green-500/10 border border-green-500/30 rounded-xl py-1.5 px-2 md:py-3.5 md:px-5 text-green-400 text-xs md:text-sm font-medium flex justify-between items-center shadow-[0_0_15px_rgba(34,197,94,0.1)]">Mitochondria <span>✓</span></div>
                 </div>
               </div>
-              <div className="glass-card rounded-2xl md:rounded-3xl p-6 md:p-8 text-left transition-transform hover:-translate-y-2 hover:border-blue-500/30">
-                <div className="inline-block px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] md:text-[10px] tracking-widest uppercase mb-4 md:mb-6 font-bold">Physics</div>
-                <p className="text-white text-base md:text-lg font-medium mb-4 md:mb-6 leading-snug">What is the SI unit of force?</p>
-                <div className="space-y-2 md:space-y-3">
-                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl py-3 px-4 md:py-3.5 md:px-5 text-blue-400 text-xs md:text-sm font-medium flex justify-between items-center shadow-[0_0_15px_rgba(59,130,246,0.1)]">Newton <span>✓</span></div>
-                  <div className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 md:py-3.5 md:px-5 text-white/50 text-xs md:text-sm">Joule</div>
+              <div className="glass-card rounded-2xl md:rounded-3xl p-3 md:p-8 text-left transition-transform hover:-translate-y-2 hover:border-blue-500/30">
+                <div className="inline-block px-2 py-0.5 md:px-3 md:py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] md:text-[10px] tracking-widest uppercase mb-2 md:mb-6 font-bold">Physics</div>
+                <p className="text-white text-xs md:text-lg font-medium mb-2 md:mb-6 leading-snug">What is the SI unit of force?</p>
+                <div className="space-y-1.5 md:space-y-3">
+                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl py-1.5 px-2 md:py-3.5 md:px-5 text-blue-400 text-xs md:text-sm font-medium flex justify-between items-center shadow-[0_0_15px_rgba(59,130,246,0.1)]">Newton <span>✓</span></div>
+                  <div className="bg-white/5 border border-white/10 rounded-xl py-1.5 px-2 md:py-3.5 md:px-5 text-white/50 text-xs md:text-sm">Joule</div>
                 </div>
               </div>
-              <div className="glass-card rounded-2xl md:rounded-3xl p-6 md:p-8 text-left transition-transform hover:-translate-y-2 hover:border-purple-500/30">
-                <div className="inline-block px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[9px] md:text-[10px] tracking-widest uppercase mb-4 md:mb-6 font-bold">Mathematics</div>
-                <p className="text-white text-base md:text-lg font-medium mb-4 md:mb-6 leading-snug">What is the value of sin(90°)?</p>
-                <div className="space-y-2 md:space-y-3">
-                  <div className="bg-white/5 border border-white/10 rounded-xl py-3 px-4 md:py-3.5 md:px-5 text-white/50 text-xs md:text-sm">0</div>
-                  <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl py-3 px-4 md:py-3.5 md:px-5 text-purple-400 text-xs md:text-sm font-medium flex justify-between items-center shadow-[0_0_15px_rgba(168,85,247,0.1)]">1 <span>✓</span></div>
+              <div className="glass-card rounded-2xl md:rounded-3xl p-3 md:p-8 text-left transition-transform hover:-translate-y-2 hover:border-purple-500/30">
+                <div className="inline-block px-2 py-0.5 md:px-3 md:py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[9px] md:text-[10px] tracking-widest uppercase mb-2 md:mb-6 font-bold">Mathematics</div>
+                <p className="text-white text-xs md:text-lg font-medium mb-2 md:mb-6 leading-snug">What is the value of sin(90°)?</p>
+                <div className="space-y-1.5 md:space-y-3">
+                  <div className="bg-white/5 border border-white/10 rounded-xl py-1.5 px-2 md:py-3.5 md:px-5 text-white/50 text-xs md:text-sm">0</div>
+                  <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl py-1.5 px-2 md:py-3.5 md:px-5 text-purple-400 text-xs md:text-sm font-medium flex justify-between items-center shadow-[0_0_15px_rgba(168,85,247,0.1)]">1 <span>✓</span></div>
                 </div>
               </div>
             </div>
@@ -554,7 +384,11 @@ export default function Home() {
             
             <div className="scene-text delay-3 w-full mt-4 md:mt-8 flex justify-center">
               {/* PERFORMANCE FIX: Pass isActive prop so video doesn't load network requests immediately */}
-              <EmbeddedDemo lang={lang} isActive={activeScene === 6} />
+              <EmbeddedDemo
+                lang={lang}
+                isActive={activeScene === 6}
+                onComplete={() => setActiveScene(7)}
+              />
             </div>
           </div>
         </section>
@@ -575,33 +409,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        {/* Floating Navigation Pill (Icon Arrows - Persists on Last Slide) */}
-        {activeScene > 0 && (
-          <div className="fixed bottom-6 md:bottom-8 left-0 w-full z-50 flex justify-center pointer-events-none">
-            <div className="flex items-center pointer-events-auto glass-pill rounded-full p-1 md:p-1.5 shadow-[0_20px_40px_rgba(0,0,0,0.8)]">
-              <button 
-                onClick={() => setActiveScene((prev) => Math.max(prev - 1, 0))} 
-                className={`text-white hover:bg-white/10 transition-all w-16 h-10 md:w-20 md:h-12 flex items-center justify-center rounded-full ${activeScene === 0 ? 'opacity-30 cursor-not-allowed' : ''}`}
-                disabled={activeScene === 0}
-                aria-label="Previous scene"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="md:w-[24px] md:h-[24px]"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-              </button>
-              
-              <div className="w-[1px] h-5 md:h-6 bg-white/20 mx-1"></div>
-              
-              <button 
-                onClick={() => setActiveScene((prev) => Math.min(prev + 1, TOTAL_SCENES - 1))} 
-                className={`story-next-btn text-white hover:bg-white/10 transition-all w-16 h-10 md:w-20 md:h-12 flex items-center justify-center rounded-full ${activeScene === TOTAL_SCENES - 1 ? 'opacity-30 cursor-not-allowed' : ''}`}
-                disabled={activeScene === TOTAL_SCENES - 1}
-                aria-label="Next scene"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="md:w-[24px] md:h-[24px]"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-              </button>
-            </div>
-          </div>
-        )}
       </main>
     </>
   );

@@ -4,7 +4,7 @@ import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "600", "700", "800"],
 });
 
 const nastaliq = Noto_Nastaliq_Urdu({
@@ -37,15 +37,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Ethnocentric font - preload then load stylesheet */}
         <link
           rel="preload"
-          href="https://fonts.cdnfonts.com/css/ethnocentric"
-          as="style"
+          href="/fonts/ethnocentric.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
         />
         <link
           rel="stylesheet"
-          href="https://fonts.cdnfonts.com/css/ethnocentric"
+          href="https://unpkg.com/mehr/mehr-font.css"
         />
       </head>
       <body
@@ -77,6 +78,17 @@ export default function RootLayout({
         <div className="stars" />
         <div className="particles" />
         <div className="vignette" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+  document.addEventListener('visibilitychange', function() {
+    document.querySelectorAll('.aurora-blob').forEach(function(el) {
+      el.style.animationPlayState = document.hidden ? 'paused' : 'running';
+    });
+  });
+`,
+          }}
+        />
         {children}
       </body>
     </html>
