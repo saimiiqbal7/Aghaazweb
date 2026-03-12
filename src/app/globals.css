@@ -43,7 +43,7 @@ body {
 .blob-1 {
   width: 800px;
   height: 800px;
-  background: radial-gradient(circle, rgba(7, 76, 43, 0.8) 0%, rgba(7, 76, 43, 0) 70%);
+  background: radial-gradient(circle, rgba(7, 76, 43, 0.6) 0%, rgba(7, 76, 43, 0) 70%);
   top: -15%;
   left: -10%;
   animation: aurora-drift-1 20s ease-in-out infinite alternate;
@@ -52,7 +52,7 @@ body {
 .blob-2 {
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, rgba(100, 180, 0, 0.5) 0%, rgba(100, 180, 0, 0) 70%);
+  background: radial-gradient(circle, rgba(10, 94, 53, 0.35) 0%, rgba(10, 94, 53, 0) 70%);
   top: 30%;
   right: -5%;
   animation: aurora-drift-2 25s ease-in-out infinite alternate;
@@ -61,7 +61,7 @@ body {
 .blob-3 {
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, rgba(191, 255, 0, 0.3) 0%, rgba(191, 255, 0, 0) 70%);
+  background: radial-gradient(circle, rgba(191, 255, 0, 0.08) 0%, rgba(191, 255, 0, 0) 70%);
   bottom: -10%;
   left: 30%;
   animation: aurora-drift-3 30s ease-in-out infinite alternate;
@@ -121,21 +121,21 @@ body {
 .orb-1 {
   width: 600px; height: 600px;
   top: -5%; left: -5%;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(7, 76, 43, 0.12) 0%, transparent 70%);
   animation-delay: 0s;
 }
 
 .orb-2 {
   width: 500px; height: 500px;
   top: 40%; right: -10%;
-  background: radial-gradient(circle, rgba(20, 184, 166, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(10, 94, 53, 0.08) 0%, transparent 70%);
   animation-delay: 3s;
 }
 
 .orb-3 {
   width: 450px; height: 450px;
   bottom: 5%; left: 15%;
-  background: radial-gradient(circle, rgba(191, 255, 0, 0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(191, 255, 0, 0.05) 0%, transparent 70%);
   animation-delay: 5.5s;
 }
 
@@ -233,11 +233,11 @@ body {
 .particles::before {
   left: 20%;
   bottom: -5%;
-  background: rgba(52, 211, 153, 0.4);
+  background: rgba(191, 255, 0, 0.3);
   box-shadow:
-    60vw 10vh 0 rgba(191, 255, 0, 0.3),
+    60vw 10vh 0 rgba(191, 255, 0, 0.25),
     25vw 30vh 0 rgba(255, 255, 255, 0.15),
-    80vw 5vh 0 rgba(52, 211, 153, 0.25),
+    80vw 5vh 0 rgba(191, 255, 0, 0.22),
     45vw 20vh 0 rgba(191, 255, 0, 0.2),
     10vw 40vh 0 rgba(255, 255, 255, 0.1);
   animation-duration: 14s;
@@ -248,10 +248,10 @@ body {
   bottom: -10%;
   background: rgba(191, 255, 0, 0.3);
   box-shadow:
-    -30vw 15vh 0 rgba(52, 211, 153, 0.3),
+    -30vw 15vh 0 rgba(191, 255, 0, 0.22),
     20vw 25vh 0 rgba(255, 255, 255, 0.12),
-    -10vw 35vh 0 rgba(191, 255, 0, 0.2),
-    35vw 8vh 0 rgba(52, 211, 153, 0.2);
+    -10vw 35vh 0 rgba(191, 255, 0, 0.18),
+    35vw 8vh 0 rgba(191, 255, 0, 0.16);
   animation-duration: 18s;
   animation-delay: 4s;
 }
@@ -288,7 +288,7 @@ body {
    ─────────────────────────────────────────── */
 
 .headline-glow {
-  text-shadow: 0 0 60px rgba(52, 211, 153, 0.15), 0 0 120px rgba(52, 211, 153, 0.05);
+  text-shadow: 0 0 60px rgba(191, 255, 0, 0.08), 0 0 120px rgba(7, 76, 43, 0.15);
 }
 
 /* ───────────────────────────────────────────
@@ -349,6 +349,97 @@ body {
   transition-delay: 0.4s;
 }
 
+/* Shared pill-button styles (hero CTA + slide nav) */
+.primary-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 2.5rem;
+  border-radius: 999px;
+  border: none;
+  background: #BFFF00; /* brand lime, ~#CCFF00 */
+  color: #000000;
+  font-weight: 600;
+  font-size: 1rem; /* 16px */
+  cursor: pointer;
+  box-shadow:
+    0 0 30px rgba(0, 0, 0, 0.6),
+    0 0 24px rgba(191, 255, 0, 0.3);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.primary-pill-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 0 40px rgba(0, 0, 0, 0.8),
+    0 0 36px rgba(191, 255, 0, 0.5);
+  filter: brightness(1.05);
+}
+
+.secondary-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 2rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease,
+    background 0.18s ease;
+}
+
+.secondary-pill-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.7);
+  color: #ffffff;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+/* Generic slide bottom nav layout (all scenes) */
+.slide-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 3.75rem;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.slide-bottom-nav-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: auto;
+}
+
+/* Top margin for slide content so it clears header */
+.scene-inner {
+  margin-top: 3.5rem;
+  padding-bottom: 5.5rem; /* leave space for bottom nav */
+  max-height: calc(100vh - 3.5rem - 5.5rem);
+  overflow-y: auto;
+}
+
+/* Hero scene tweaks: slightly tighter frame since no bottom nav */
+.hero-inner {
+  margin-top: 2.5rem;
+  padding-bottom: 3.5rem;
+  max-height: calc(100vh - 2.5rem - 3.5rem);
+}
+
 /* ───────────────────────────────────────────
    URDU TEXT
    ─────────────────────────────────────────── */
@@ -357,7 +448,7 @@ body {
   font-family: var(--font-urdu), 'Noto Nastaliq Urdu', serif;
   direction: rtl;
   text-align: center;
-  color: rgba(255, 255, 255, 0.25);
+  color: inherit;
   margin-top: 0.75rem;
   line-height: 2;
 }
@@ -367,12 +458,12 @@ body {
    ─────────────────────────────────────────── */
 
 .gradient-text {
-  background: linear-gradient(180deg, #ffffff 0%, #a7f3d0 40%, #BFFF00 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #BFFF00 60%, #074C2B 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   line-height: 1.05;
-  filter: drop-shadow(0 0 40px rgba(52, 211, 153, 0.15));
+  filter: drop-shadow(0 0 40px rgba(7, 76, 43, 0.15));
 }
 
 /* ───────────────────────────────────────────
@@ -479,6 +570,9 @@ body {
   background: rgba(255, 255, 255, 0.1);
   transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.05);
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .progress-dot.active {
@@ -579,18 +673,18 @@ body {
 }
 
 @keyframes ctaBreathe {
-  0%, 100% { box-shadow: 0 0 20px rgba(191, 255, 0, 0.1), 0 0 60px rgba(52, 211, 153, 0.05); }
-  50% { box-shadow: 0 0 30px rgba(191, 255, 0, 0.2), 0 0 80px rgba(52, 211, 153, 0.1); }
+  0%, 100% { box-shadow: 0 0 20px rgba(191, 255, 0, 0.1), 0 0 60px rgba(191, 255, 0, 0.03); }
+  50% { box-shadow: 0 0 30px rgba(191, 255, 0, 0.2), 0 0 80px rgba(191, 255, 0, 0.08); }
 }
 
 /* ───────────────────────────────────────────
    GLOW ORB ZONES
    ─────────────────────────────────────────── */
 
-.glow-zone-0 { background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, rgba(52, 211, 153, 0.03) 40%, transparent 70%); }
-.glow-zone-1 { background: radial-gradient(circle, rgba(20, 184, 166, 0.12) 0%, rgba(52, 211, 153, 0.04) 40%, transparent 70%); top: 45%; }
-.glow-zone-2 { background: radial-gradient(circle, rgba(52, 211, 153, 0.14) 0%, rgba(191, 255, 0, 0.04) 40%, transparent 70%); left: 40%; }
-.glow-zone-3 { background: radial-gradient(circle, rgba(191, 255, 0, 0.18) 0%, rgba(52, 211, 153, 0.06) 40%, transparent 70%); }
+.glow-zone-0 { background: radial-gradient(circle, rgba(7, 76, 43, 0.15) 0%, transparent 70%); }
+.glow-zone-1 { background: radial-gradient(circle, rgba(10, 94, 53, 0.12) 0%, transparent 70%); top: 45%; }
+.glow-zone-2 { background: radial-gradient(circle, rgba(13, 112, 64, 0.14) 0%, transparent 70%); left: 40%; }
+.glow-zone-3 { background: radial-gradient(circle, rgba(191, 255, 0, 0.06) 0%, transparent 70%); }
 
 /* ───────────────────────────────────────────
    SCENE DIVIDERS
@@ -603,7 +697,7 @@ body {
   opacity: 0;
   transition: opacity 1s ease-out 0.5s;
   position: relative;
-  background: linear-gradient(90deg, transparent, rgba(52, 211, 153, 0.3), rgba(191, 255, 0, 0.4), rgba(52, 211, 153, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(191, 255, 0, 0.15), rgba(191, 255, 0, 0.3), rgba(191, 255, 0, 0.15), transparent);
 }
 
 .scene-divider::after {
@@ -1103,11 +1197,16 @@ body {
   /* ── 1. Scene layout ── */
 
   [data-scene] {
-    min-height: 100svh;
-    padding: 2.5rem 1.5rem;
+    min-height: auto;
+    padding: 2.5rem 1.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  [data-scene="0"],
+  [data-scene="7"] {
+    min-height: 100svh;
   }
 
   /* ── 2. Typography scaling ── */
@@ -1318,6 +1417,63 @@ body {
     transform: translateY(0) !important;
   }
 
+/* Story-style navigation (Instagram stories vibe) */
+.story-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 2.5rem;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-nav-btn {
+  border-radius: 999px;
+  font-size: 0.825rem;
+  padding: 0.55rem 1.4rem;
+  cursor: pointer;
+  border-width: 1px;
+  border-style: solid;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.story-nav-btn-primary {
+  background: #BFFF00;
+  color: #04160c;
+  border-color: rgba(191, 255, 0, 0.9);
+  font-weight: 600;
+  box-shadow:
+    0 0 30px rgba(0, 0, 0, 0.6),
+    0 0 24px rgba(191, 255, 0, 0.3);
+}
+
+.story-nav-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 40px rgba(0, 0, 0, 0.8),
+    0 0 36px rgba(191, 255, 0, 0.5);
+}
+
+.story-nav-btn-secondary {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.story-nav-btn-secondary:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #ffffff;
+}
+
   [data-scene="3"] .quiz-card {
     transform: translateY(25px) !important;
   }
@@ -1338,8 +1494,18 @@ body {
   }
 
   .scroll-indicator {
-    bottom: 24px;
+    bottom: 40px;
     padding: 12px;
+  }
+
+  .slide-bottom-nav {
+    bottom: 2.25rem;
+  }
+
+  .scene-inner {
+    margin-top: 3rem;
+    padding-bottom: 4.5rem;
+    max-height: calc(100vh - 3rem - 4.5rem);
   }
 }
 

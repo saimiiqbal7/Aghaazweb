@@ -57,14 +57,11 @@ export default function RootLayout({
           color: "#ffffff",
         }}
       >
-        {/* Fixed minimal header — sits above everything */}
-        <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3">
-          <span className="text-white/30 text-xs font-ethnocentric tracking-wider">
-            AGHAAZ
-          </span>
+        {/* Fixed minimal header */}
+        <div className="fixed top-3 left-0 right-0 z-50 flex items-center justify-between px-6 py-3" id="global-header">
           <a
             href="/login"
-            className="text-white/40 text-xs hover:text-white/60 transition-colors"
+            className="text-sm font-medium px-5 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/40 transition-all"
           >
             Sign in
           </a>

@@ -2,77 +2,58 @@
 
 import { useEffect, useState } from 'react';
 
+const TOTAL_SCENES = 8;
+
 export default function Home() {
+  const [lang, setLang] = useState<'en' | 'ur'>('en');
   const [chatLang, setChatLang] = useState<'en' | 'ur'>('en');
+  const [activeScene, setActiveScene] = useState(0);
 
-  // Scene scroll animations
+  // Update glow orb zone based on active scene
   useEffect(() => {
-    const isMobile = window.innerWidth < 640;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('scene-active');
-            const idx = entry.target.getAttribute('data-scene');
-            document.querySelectorAll('.progress-dot').forEach((dot, i) => {
-              dot.classList.toggle('active', i === Number(idx));
-            });
-          }
-        });
-      },
-      { threshold: isMobile ? 0.15 : 0.3 }
-    );
-
-    document.querySelectorAll('[data-scene]').forEach((el) => {
-      observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  // Scroll effects (streaks + glow)
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    const streaks = document.querySelector('.star-streaks');
     const glowOrb = document.querySelector('.glow-orb');
-
-    const onScroll = () => {
-      streaks?.classList.add('is-scrolling');
-      clearTimeout(timeout);
-      timeout = setTimeout(() => streaks?.classList.remove('is-scrolling'), 300);
-
-      if (glowOrb) {
-        const total = document.body.scrollHeight - window.innerHeight;
-        const fraction = total > 0 ? window.scrollY / total : 0;
-        const zone = fraction < 0.25 ? 0 : fraction < 0.50 ? 1 : fraction < 0.75 ? 2 : 3;
-        glowOrb.className = `glow-orb glow-zone-${zone}`;
-      }
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    if (!glowOrb) return;
+    const zone = activeScene < 2 ? 0 : activeScene < 4 ? 1 : activeScene < 6 ? 2 : 3;
+    glowOrb.className = `glow-orb glow-zone-${zone}`;
+  }, [activeScene]);
 
   // Auto-toggle Blitz chat language when Scene 4 is active
   useEffect(() => {
     const interval = setInterval(() => {
-      const scene4 = document.querySelector('[data-scene="4"]');
-      if (scene4 && scene4.classList.contains('scene-active')) {
+      if (activeScene === 4) {
         setChatLang((prev) => (prev === 'en' ? 'ur' : 'en'));
       }
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
-
-  const scrollToScene1 = () => {
-    document
-      .querySelector('[data-scene="1"]')
-      ?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, [activeScene]);
 
   return (
     <>
+    {/* Language toggle – aligned with Sign in */}
+    <div className="fixed top-3 right-6 z-50 flex items-center gap-1.5 text-xs">
+      <button
+        onClick={() => { setLang('en'); setChatLang('en'); }}
+        className={`px-3 py-1.5 rounded-full border transition-all ${
+          lang === 'en'
+            ? 'border-white/40 bg-white/10 text-white'
+            : 'border-white/15 text-white/40 hover:text-white/70'
+        }`}
+      >
+        EN
+      </button>
+      <button
+        onClick={() => { setLang('ur'); setChatLang('ur'); }}
+        className={`px-3 py-1.5 rounded-full border transition-all ${
+          lang === 'ur'
+            ? 'border-white/40 bg-white/10 text-white'
+            : 'border-white/15 text-white/40 hover:text-white/70'
+        }`}
+      >
+        اردو
+      </button>
+    </div>
+
     <main className="relative z-10" style={{ perspective: '1200px', perspectiveOrigin: '50% 50%' }}>
       {/* Star streaks */}
       <div className="star-streaks">
@@ -86,8 +67,13 @@ export default function Home() {
 
       {/* Progress dots */}
       <div className="progress-track">
-        {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-          <div key={i} className={`progress-dot${i === 0 ? ' active' : ''}`} />
+        {Array.from({ length: TOTAL_SCENES }).map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            className={`progress-dot${i === activeScene ? ' active' : ''}`}
+            onClick={() => setActiveScene(i)}
+          />
         ))}
       </div>
 
@@ -96,9 +82,12 @@ export default function Home() {
           ════════════════════════════════════════ */}
       <section
         data-scene="0"
-        className="min-h-screen flex items-center justify-center relative px-6"
+        className={`min-h-screen flex items-center justify-center relative px-6 ${
+          activeScene === 0 ? 'scene-active' : ''
+        }`}
+        style={{ display: activeScene === 0 ? 'flex' : 'none' }}
       >
-        <div className="text-center max-w-[90%] md:max-w-[700px]">
+        <div className="scene-inner hero-inner text-center max-w-[90%] md:max-w-[700px]">
           <div className="scene-text delay-1 flex flex-col items-center gap-4 mb-6">
             <img src="/aghaaz-logo.png" alt="Aghaaz" className="h-16 md:h-20 w-auto object-contain" />
             <p className="font-ethnocentric text-xs tracking-widest uppercase text-white/90">
@@ -110,15 +99,15 @@ export default function Home() {
             className="scene-text delay-2 gradient-text font-extrabold text-center"
             style={{ fontSize: 'clamp(36px, 7vw, 80px)' }}
           >
-            The End of Boring Lectures.
+            {lang === 'en' ? 'The End of Boring Lectures.' : 'بورنگ لیکچرز کا خاتمہ۔'}
           </h1>
 
           <div className="scene-text delay-4 mt-8">
             <button
-              onClick={scrollToScene1}
-              className="bg-[#BFFF00] text-[#04160c] font-semibold px-10 py-4 rounded-xl hover:shadow-[0_0_40px_rgba(191,255,0,0.2)] hover:-translate-y-0.5 transition-all text-lg"
+              onClick={() => setActiveScene(1)}
+              className="primary-pill-btn"
             >
-              See How It Works →
+              {lang === 'en' ? 'See how it works →' : 'دیکھیں یہ کیسے کام کرتا ہے →'}
             </button>
           </div>
 
@@ -146,21 +135,26 @@ export default function Home() {
           ════════════════════════════════════════ */}
       <section
         data-scene="1"
-        className="min-h-screen flex items-center justify-center relative px-6"
+        className={`flex items-center justify-center relative px-6 py-24 md:py-32 ${
+          activeScene === 1 ? 'scene-active' : ''
+        }`}
+        style={{ display: activeScene === 1 ? 'flex' : 'none' }}
       >
-        <div className="text-center max-w-[90%] md:max-w-[700px]">
+        <div className="scene-inner text-center max-w-[90%] md:max-w-[700px]">
           <p className="scene-text delay-1 eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
             THE REALITY
           </p>
 
-          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow">
-            For years, students in Pakistan have been stuck with boring
-            40-minute lectures.
-          </h2>
-
-          <p className="scene-text delay-3 text-xl md:text-2xl urdu-text">
-            برسوں سے پاکستان کے طلبا بورنگ لیکچرز میں پھنسے ہوئے ہیں
-          </p>
+          {lang === 'en' ? (
+            <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow">
+              For years, students in Pakistan have been stuck with boring
+              40-minute lectures.
+            </h2>
+          ) : (
+            <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow urdu-text">
+              برسوں سے پاکستان کے طلبا بورنگ لیکچرز میں پھنسے ہوئے ہیں
+            </h2>
+          )}
         </div>
       </section>
 
@@ -171,20 +165,25 @@ export default function Home() {
           ════════════════════════════════════════ */}
       <section
         data-scene="2"
-        className="min-h-screen flex items-center justify-center relative px-6"
+        className={`flex items-center justify-center relative px-6 py-24 md:py-32 ${
+          activeScene === 2 ? 'scene-active' : ''
+        }`}
+        style={{ display: activeScene === 2 ? 'flex' : 'none' }}
       >
-        <div className="text-center max-w-[90%] md:max-w-[700px]">
+        <div className="scene-inner text-center max-w-[90%] md:max-w-[700px]">
           <p className="scene-text delay-1 eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
             THE FIX
           </p>
 
-          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow">
-            Every topic. Broken into 10-minute lessons.
-          </h2>
-
-          <p className="scene-text delay-3 text-xl md:text-2xl urdu-text">
-            ہر ٹاپک۔ دس منٹ کے آسان سبق میں۔
-          </p>
+          {lang === 'en' ? (
+            <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow">
+              Every topic. Broken into 10-minute lessons.
+            </h2>
+          ) : (
+            <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow urdu-text">
+              ہر ٹاپک، دس منٹ کے آسان اسباق میں۔
+            </h2>
+          )}
 
           <div className="scene-text delay-4 bar-visual mt-10 max-w-lg mx-auto">
             <div className="glass-card rounded-2xl p-6 sm:p-8 border-white/5">
@@ -223,20 +222,25 @@ export default function Home() {
           ════════════════════════════════════════ */}
       <section
         data-scene="3"
-        className="min-h-screen flex items-center justify-center relative px-6"
+        className={`flex items-center justify-center relative px-6 py-24 md:py-32 ${
+          activeScene === 3 ? 'scene-active' : ''
+        }`}
+        style={{ display: activeScene === 3 ? 'flex' : 'none' }}
       >
-        <div className="text-center max-w-[90%] md:max-w-[900px]">
+        <div className="scene-inner text-center max-w-[90%] md:max-w-[900px]">
           <p className="scene-text delay-1 eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
             THE CHECK
           </p>
 
-          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow">
-            Every lecture has a built-in quiz.
-          </h2>
-
-          <p className="scene-text delay-3 text-xl md:text-2xl urdu-text">
-            ہر لیکچر کے اندر کوئز ہے۔
-          </p>
+          {lang === 'en' ? (
+            <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow">
+              Every lecture has a built-in quiz.
+            </h2>
+          ) : (
+            <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow urdu-text">
+              ہر لیکچر کے اندر کوئز شامل ہے۔
+            </h2>
+          )}
 
           {/* Desktop: row — Mobile: horizontal scroll */}
           <div className="hidden md:flex gap-4 mt-8 max-w-4xl mx-auto">
@@ -317,20 +321,25 @@ export default function Home() {
           ════════════════════════════════════════ */}
       <section
         data-scene="4"
-        className="min-h-screen flex items-center justify-center relative px-6"
+        className={`flex items-center justify-center relative px-6 py-24 md:py-32 ${
+          activeScene === 4 ? 'scene-active' : ''
+        }`}
+        style={{ display: activeScene === 4 ? 'flex' : 'none' }}
       >
-        <div className="text-center max-w-[90%] md:max-w-[900px]">
+        <div className="scene-inner text-center max-w-[90%] md:max-w-[900px]">
           <p className="scene-text delay-1 eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
             THE BACKUP
           </p>
 
-          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow">
-            Meet Blitz. Your AI tutor trained on every Matric and FSc exam.
-          </h2>
-
-          <p className="scene-text delay-3 text-xl md:text-2xl urdu-text">
-            بلٹز سے ملو۔ تمہارا AI ٹیوٹر جو میٹرک اور ایف ایس سی کے ہر امتحان پر تیار ہے۔
-          </p>
+          {lang === 'en' ? (
+            <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow">
+              Meet Blitz. Your AI tutor trained on every Matric and FSc exam.
+            </h2>
+          ) : (
+            <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow urdu-text">
+              بلٹز سے ملو، تمہارا AI ٹیوٹر جو میٹرک اور ایف ایس سی کے ہر امتحان پر تیار ہے۔
+            </h2>
+          )}
 
           {/* Single chat that alternates language */}
           <div className="scene-text delay-4 mt-10 max-w-lg mx-auto">
@@ -368,7 +377,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex justify-start">
-                    <div className="bg-[#0d6b3f] rounded-2xl rounded-bl-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
+                    <div className="bg-[#074C2B] rounded-2xl rounded-bl-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
                       Think of it this way — when you push a wall, the wall pushes back on your hand with the same force. That&apos;s why your hand hurts! The forces are equal and opposite. 🧱
                     </div>
                   </div>
@@ -386,7 +395,7 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="flex justify-start">
-                    <div className="bg-[#0d6b3f] rounded-2xl rounded-bl-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
+                    <div className="bg-[#074C2B] rounded-2xl rounded-bl-md py-3 px-5 text-white/90 max-w-[80%] text-sm">
                       Socho aise — jab aap deewar ko dhakelte hain, deewar aap ke haath par usi qawat se wapas dhakelti hai. Isi liye haath dard karta hai! Qawatein barabar aur mukhalif hain. 🧱
                     </div>
                   </div>
@@ -409,41 +418,55 @@ export default function Home() {
           ════════════════════════════════════════ */}
       <section
         data-scene="5"
-        className="min-h-screen flex items-center justify-center relative px-6"
+        className={`flex items-center justify-center relative px-6 py-24 md:py-32 ${
+          activeScene === 5 ? 'scene-active' : ''
+        }`}
+        style={{ display: activeScene === 5 ? 'flex' : 'none' }}
       >
-        <div className="text-center max-w-[90%] md:max-w-[700px]">
+        <div className="scene-inner text-center max-w-[90%] md:max-w-[700px]">
           <p className="scene-text delay-1 eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-6">
             THE PRICE
           </p>
 
-          <p className="scene-text delay-2 crossed-price text-2xl md:text-4xl text-white/50">
-            PKR 12,000/month
-          </p>
-
-          <h2
-            className="real-price delay-3 gradient-text font-bold mt-4"
-            style={{ fontSize: 'clamp(40px, 8vw, 80px)' }}
-          >
-            PKR 2,000/month
-          </h2>
-
-          <p className="scene-text delay-4 text-2xl md:text-3xl urdu-text text-white/20">
-            صرف دو ہزار ماہانہ
-          </p>
-
-          <p className="scene-text delay-5 text-lg text-white/40 mt-6">
-            All subjects. All quizzes. Blitz included. Cancel anytime.
-          </p>
-
-          <p className="scene-text delay-6 text-base urdu-text text-white/15">
-            تمام مضامین۔ تمام کوئزز۔ بلٹز شامل۔ کبھی بھی بند کرو۔
-          </p>
+          {lang === 'en' ? (
+            <>
+              <p className="scene-text delay-2 crossed-price text-2xl md:text-4xl text-white/50">
+                PKR 12,000/month
+              </p>
+              <h2
+                className="real-price delay-3 gradient-text font-bold mt-4"
+                style={{ fontSize: 'clamp(40px, 8vw, 80px)' }}
+              >
+                PKR 2,000/month
+              </h2>
+              <p className="scene-text delay-5 text-lg text-white/40 mt-6">
+                All subjects. All quizzes. Blitz included. Cancel anytime.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="scene-text delay-2 crossed-price text-2xl md:text-4xl text-white/50">
+                12,000 روپے ماہانہ
+              </p>
+              <h2
+                className="real-price delay-3 gradient-text font-bold mt-4 urdu-text"
+                style={{ fontSize: 'clamp(40px, 8vw, 80px)' }}
+              >
+                صرف دو ہزار ماہانہ
+              </h2>
+              <p className="scene-text delay-5 text-lg urdu-text text-white/40 mt-6">
+                تمام مضامین۔ تمام کوئزز۔ بلٹز شامل۔ کبھی بھی بند کرو۔
+              </p>
+            </>
+          )}
         </div>
       </section>
 
       <div className="py-12 text-center">
         <p className="text-white/25 text-sm tracking-wide">
-          Trusted by students across Rawalpindi, Islamabad & Lahore
+          {lang === 'en'
+            ? 'Built for Matric & FSc students in Pakistan'
+            : 'پاکستان کے میٹرک اور ایف ایس سی کے طلبا کے لیے بنایا گیا'}
         </p>
       </div>
 
@@ -454,31 +477,41 @@ export default function Home() {
           ════════════════════════════════════════ */}
       <section
         data-scene="6"
-        className="min-h-screen flex items-center justify-center relative px-6"
+        className={`flex items-center justify-center relative px-6 py-24 md:py-32 ${
+          activeScene === 6 ? 'scene-active' : ''
+        }`}
+        style={{ display: activeScene === 6 ? 'flex' : 'none' }}
       >
-        <div className="text-center max-w-[90%] md:max-w-[700px]">
+        <div className="scene-inner text-center max-w-[90%] md:max-w-[700px]">
           <div className="scene-text delay-1">
             <p className="eyebrow text-xs tracking-[0.3em] uppercase text-[#BFFF00]/60 mb-1">
-              TRY IT NOW
-            </p>
-            <p className="text-sm urdu-text text-[#BFFF00]/40">
-              آزما کر دیکھو
+              {lang === 'en' ? 'TRY IT NOW' : 'ابھی آزما کر دیکھو'}
             </p>
           </div>
 
-          <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow mt-6">
-            See what an Aghaaz lesson feels like.
-          </h2>
-
-          <p className="scene-text delay-2 text-xl md:text-2xl urdu-text">
-            دیکھو آغاز کا سبق کیسا ہوتا ہے۔
-          </p>
+          {lang === 'en' ? (
+            <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow mt-6">
+              See what an Aghaaz lesson feels like.
+            </h2>
+          ) : (
+            <h2 className="scene-text delay-2 text-3xl md:text-5xl font-bold text-white leading-tight headline-glow urdu-text mt-6">
+              دیکھو آغاز کا سبق کیسا ہوتا ہے۔
+            </h2>
+          )}
 
           <div className="scene-text delay-3 mt-10">
             <div className="glass-card rounded-2xl p-8 text-center">
-              <p className="text-white/50 text-xs tracking-wide uppercase mb-3">Sample Lesson</p>
-              <p className="text-white font-medium text-lg mb-1">Hassam Explains Binary Conversion</p>
-              <p className="text-white/40 text-sm mb-6">Lesson 1 · Chapter 1 · 9th Computer Science</p>
+              <p className="text-white/50 text-xs tracking-wide uppercase mb-3">
+                {lang === 'en' ? 'Sample Lesson' : 'نمونہ سبق'}
+              </p>
+              <p className="text-white font-medium text-lg mb-1">
+                {lang === 'en' ? 'Hassam Explains Binary Conversion' : 'حسام بائنری کنورژن سمجھاتا ہے'}
+              </p>
+              <p className="text-white/40 text-sm mb-6">
+                {lang === 'en'
+                  ? 'Lesson 1 · Chapter 1 · 9th Computer Science'
+                  : 'سبق 1 · باب 1 · نویں جماعت کمپیوٹر سائنس'}
+              </p>
               <a
                 href="/lesson"
                 className="inline-block bg-[#BFFF00] text-[#04160c] font-semibold px-10 py-4 rounded-xl hover:shadow-[0_0_40px_rgba(191,255,0,0.2)] hover:-translate-y-0.5 transition-all text-lg"
@@ -486,18 +519,23 @@ export default function Home() {
                 Try Aghaaz →
               </a>
               <p className="text-white/20 text-xs mt-4">
-                Includes built-in quiz with AI tutor feedback
+                {lang === 'en'
+                  ? 'Includes built-in quiz with AI tutor feedback'
+                  : 'اس میں بلٹ اِن کوئز اور AI ٹیوٹر فیڈبیک شامل ہے'}
               </p>
             </div>
           </div>
 
           <div className="scene-text delay-4 mt-6">
-            <p className="text-sm text-white/30">
-              Watch a real lesson with a built-in quiz and Blitz, your AI tutor.
-            </p>
-            <p className="text-sm urdu-text text-white/15">
-              ایک اصلی سبق دیکھو جس میں کوئز اور بلٹز AI ٹیوٹر شامل ہے۔
-            </p>
+            {lang === 'en' ? (
+              <p className="text-sm text-white/30">
+                Watch a real lesson with a built-in quiz and Blitz, your AI tutor.
+              </p>
+            ) : (
+              <p className="text-sm urdu-text text-white/15">
+                ایک اصلی سبق دیکھو جس میں کوئز اور بلٹز AI ٹیوٹر شامل ہے۔
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -509,24 +547,29 @@ export default function Home() {
           ════════════════════════════════════════ */}
       <section
         data-scene="7"
-        className="min-h-screen flex items-center justify-center relative px-6"
+        className={`min-h-screen flex items-center justify-center relative px-6 ${
+          activeScene === 7 ? 'scene-active' : ''
+        }`}
+        style={{ display: activeScene === 7 ? 'flex' : 'none' }}
       >
-        <div className="text-center max-w-[90%] md:max-w-[700px]">
-          <h2 className="scene-text delay-1 text-4xl md:text-6xl font-bold text-white headline-glow">
-            Ready to start?
-          </h2>
-
-          <p className="scene-text delay-1 text-2xl md:text-3xl urdu-text">
-            شروع کریں؟
-          </p>
+        <div className="scene-inner text-center max-w-[90%] md:max-w-[700px]">
+          {lang === 'en' ? (
+            <h2 className="scene-text delay-1 text-4xl md:text-6xl font-bold text-white headline-glow">
+              Ready to start?
+            </h2>
+          ) : (
+            <h2 className="scene-text delay-1 text-4xl md:text-6xl font-bold text-white headline-glow urdu-text">
+              شروع کریں؟
+            </h2>
+          )}
 
           <div className="scene-text delay-2 mt-8">
             <div className="flex flex-col items-center gap-3">
               <a
                 href="/signup"
-                className="cta-button bg-[#BFFF00] text-[#04160c] font-semibold px-12 py-4 rounded-xl hover:shadow-[0_0_40px_rgba(191,255,0,0.2)] hover:-translate-y-0.5 transition-all text-lg"
+                className="cta-button bg-[#BFFF00] text-[#04160c] font-bold px-16 py-5 rounded-2xl hover:shadow-[0_0_60px_rgba(191,255,0,0.3)] hover:-translate-y-1 transition-all text-xl tracking-wide"
               >
-                Start Learning →
+                {lang === 'en' ? 'Start Learning →' : 'سیکھنا شروع کریں →'}
               </a>
               <a
                 href="https://wa.me/923315319850"
@@ -534,7 +577,9 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="text-white/30 text-sm hover:text-white/50 transition-colors"
               >
-                or talk to an Aghaaz rep ↗
+                {lang === 'en'
+                  ? 'or talk to an Aghaaz rep ↗'
+                  : 'یا آغاز نمائندہ سے بات کریں ↗'}
               </a>
             </div>
           </div>
@@ -586,6 +631,37 @@ export default function Home() {
           </footer>
         </div>
       </section>
+
+      {/* Global slide bottom navigation (BACK / NEXT) – hidden on first screen */}
+      {activeScene > 0 && (
+        <div className="slide-bottom-nav">
+          <div className="slide-bottom-nav-inner">
+            {activeScene > 0 ? (
+              <button
+                type="button"
+                className="secondary-pill-btn"
+                onClick={() => setActiveScene((prev) => Math.max(prev - 1, 0))}
+              >
+                ← BACK
+              </button>
+            ) : (
+              <span />
+            )}
+
+            {activeScene < TOTAL_SCENES - 1 ? (
+              <button
+                type="button"
+                className="primary-pill-btn"
+                onClick={() => setActiveScene((prev) => Math.min(prev + 1, TOTAL_SCENES - 1))}
+              >
+                NEXT →
+              </button>
+            ) : (
+              <span />
+            )}
+          </div>
+        </div>
+      )}
     </main>
     </>
   );
