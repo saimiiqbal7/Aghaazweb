@@ -16,8 +16,10 @@ const nastaliq = Noto_Nastaliq_Urdu({
 });
 
 export const metadata: Metadata = {
-  title: "Aghaaz — Take the Flight",
-  description: "Take the Aghaaz Flight",
+  title: "Aghaaz — Matric & FSc Video Lessons, Quizzes & AI Tutor",
+  description:
+    "10-minute video lessons with built-in quizzes and Blitz AI tutor. Built for Pakistani Matric and FSc students. PKR 2,000/month.",
+  icons: { icon: "/aghaaz-logo.png" },
 };
 
 export const viewport: Viewport = {
@@ -34,14 +36,40 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Ethnocentric font - preload then load stylesheet */}
+        <link
+          rel="preload"
+          href="https://fonts.cdnfonts.com/css/ethnocentric"
+          as="style"
+        />
+        <link
+          rel="stylesheet"
+          href="https://fonts.cdnfonts.com/css/ethnocentric"
+        />
+      </head>
       <body
         className={`${inter.className} ${nastaliq.variable}`}
         style={{
-          background: "linear-gradient(165deg, #0a4a2e 0%, #063b22 20%, #042e1a 45%, #021810 75%, #010d08 100%)",
+          background:
+            "linear-gradient(165deg, #0a4a2e 0%, #063b22 20%, #042e1a 45%, #021810 75%, #010d08 100%)",
           backgroundAttachment: "fixed",
           color: "#ffffff",
         }}
       >
+        {/* Fixed minimal header — sits above everything */}
+        <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3">
+          <span className="text-white/30 text-xs font-ethnocentric tracking-wider">
+            AGHAAZ
+          </span>
+          <a
+            href="/login"
+            className="text-white/40 text-xs hover:text-white/60 transition-colors"
+          >
+            Sign in
+          </a>
+        </div>
+
         <div className="aurora-bg">
           <div className="aurora-blob blob-1" />
           <div className="aurora-blob blob-2" />
