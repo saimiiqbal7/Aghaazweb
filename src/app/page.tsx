@@ -1,161 +1,162 @@
-'use client';
+'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react';
-import EmbeddedDemo from './components/EmbeddedDemo';
+import { useEffect, useState, useRef, useCallback } from 'react'
+import WarpCanvas from './components/WarpCanvas'
 
-const TOTAL_SCENES = 8;
+const TOTAL_SCENES = 6
+const SCENE_NAMES = ['Intro', 'The Problem', 'Aghaaz', 'Active Learning', 'Blitz AI', 'Pricing'] as const
 
-const SCENE_NAMES = [
-  'Intro',
-  'The Problem',
-  'The Fix',
-  'Quizzes',
-  'Blitz AI',
-  'Pricing',
-  'Try It',
-  'Get Started',
-] as const;
-
-// --- MAIN LANDING PAGE ---
 export default function Home() {
-  const [lang, setLang] = useState<'en' | 'ur'>('en');
-  const [chatLang, setChatLang] = useState<'en' | 'ur'>('en');
-  const [activeScene, setActiveScene] = useState(0);
-  const activeSceneRef = useRef(activeScene);
+  const [lang, setLang] = useState<'en' | 'ur'>('en')
+  const [blitzLang, setBlitzLang] = useState<'en' | 'ur'>('en')
+  const [blitzVisible, setBlitzVisible] = useState(true)
+  const [activeScene, setActiveScene] = useState(0)
+  const [introVisible, setIntroVisible] = useState(true)
+  const [watched, setWatched] = useState(false)
+  const [flyingHome, setFlyingHome] = useState(false)
+  const [flyingIn, setFlyingIn] = useState(false)
+  const activeSceneRef = useRef(activeScene)
 
+  useEffect(() => { activeSceneRef.current = activeScene }, [activeScene])
+
+  // Intro sequence
   useEffect(() => {
-    activeSceneRef.current = activeScene;
-  }, [activeScene]);
+    const timer = setTimeout(() => {
+      const overlay = document.getElementById('intro-overlay')
+      if (overlay) overlay.classList.add('fade-out')
+      setTimeout(() => setIntroVisible(false), 800)
+    }, 1400)
+    return () => clearTimeout(timer)
+  }, [])
 
   const navigateToScene = useCallback((next: number) => {
-    const clamped = Math.max(0, Math.min(TOTAL_SCENES - 1, next));
-    setActiveScene(clamped);
-  }, []);
+    setActiveScene(Math.max(0, Math.min(TOTAL_SCENES - 1, next)))
+  }, [])
 
+  const triggerFlyHome = useCallback(() => {
+    if (flyingIn || flyingHome) return
+    setFlyingHome(true)
+    setWatched(true)
+  }, [flyingIn, flyingHome])
+
+  const triggerFlyIn = useCallback(() => {
+    if (flyingIn || flyingHome) return
+    setFlyingIn(true)
+  }, [flyingIn, flyingHome, navigateToScene])
+
+  // Wheel
   useEffect(() => {
-    const isAnimatingRef = { current: false };
+    const isAnimating = { current: false }
+    const onWheel = (e: WheelEvent) => {
+      const target = e.target as HTMLElement
+      if (target.closest('.blitz-chat')) return
+      e.preventDefault()
+      if (isAnimating.current || Math.abs(e.deltaY) < 10) return
+      isAnimating.current = true
+      if (activeSceneRef.current === TOTAL_SCENES - 1 && e.deltaY > 0) {
+        triggerFlyHome()
+        setTimeout(() => { isAnimating.current = false }, 1800)
+        return
+      }
+      navigateToScene(activeSceneRef.current + (e.deltaY > 0 ? 1 : -1))
+      setTimeout(() => { isAnimating.current = false }, 1000)
+    }
+    window.addEventListener('wheel', onWheel, { passive: false })
+    return () => window.removeEventListener('wheel', onWheel)
+  }, [navigateToScene, triggerFlyHome])
 
-    const handleWheel = (e: WheelEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target.closest('.blitz-chat') ||
-        target.closest('.quiz-card-overlay')
-      )
-        return;
-
-      e.preventDefault();
-      if (isAnimatingRef.current) return;
-
-      if (Math.abs(e.deltaY) < 10) return;
-
-      isAnimatingRef.current = true;
-
-      const next =
-        e.deltaY > 0
-          ? Math.min(activeSceneRef.current + 1, TOTAL_SCENES - 1)
-          : Math.max(activeSceneRef.current - 1, 0);
-
-      navigateToScene(next);
-
-      setTimeout(() => {
-        isAnimatingRef.current = false;
-      }, 1100);
-    };
-
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, [navigateToScene]);
-
+  // Touch
   useEffect(() => {
-    let touchStartY = 0;
-    let touchStartTime = 0;
-    const isAnimatingRef = { current: false };
-
-    const handleTouchStart = (e: TouchEvent) => {
-      touchStartY = e.touches[0].clientY;
-      touchStartTime = Date.now();
-    };
-
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (isAnimatingRef.current) return;
-
-      const delta = touchStartY - e.changedTouches[0].clientY;
-      const elapsed = Date.now() - touchStartTime;
-
-      if (Math.abs(delta) < 40) return;
-      if (elapsed > 500) return;
-
-      isAnimatingRef.current = true;
-
-      const next =
-        delta > 0
-          ? Math.min(activeSceneRef.current + 1, TOTAL_SCENES - 1)
-          : Math.max(activeSceneRef.current - 1, 0);
-
-      navigateToScene(next);
-
-      setTimeout(() => {
-        isAnimatingRef.current = false;
-      }, 1100);
-    };
-
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchend', handleTouchEnd, { passive: true });
-
+    let startY = 0, startT = 0
+    const isAnimating = { current: false }
+    const onStart = (e: TouchEvent) => { startY = e.touches[0].clientY; startT = Date.now() }
+    const onEnd = (e: TouchEvent) => {
+      if (isAnimating.current) return
+      const delta = startY - e.changedTouches[0].clientY
+      if (Math.abs(delta) < 40 || Date.now() - startT > 500) return
+      isAnimating.current = true
+      if (activeSceneRef.current === TOTAL_SCENES - 1 && delta > 0) {
+        triggerFlyHome()
+        setTimeout(() => { isAnimating.current = false }, 1800)
+        return
+      }
+      navigateToScene(activeSceneRef.current + (delta > 0 ? 1 : -1))
+      setTimeout(() => { isAnimating.current = false }, 1000)
+    }
+    window.addEventListener('touchstart', onStart, { passive: true })
+    window.addEventListener('touchend', onEnd, { passive: true })
     return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchend', handleTouchEnd);
-    };
-  }, [navigateToScene]);
+      window.removeEventListener('touchstart', onStart)
+      window.removeEventListener('touchend', onEnd)
+    }
+  }, [navigateToScene, triggerFlyHome])
 
+  // Keyboard
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
-        setActiveScene(prev => Math.min(prev + 1, TOTAL_SCENES - 1));
-      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
-        setActiveScene(prev => Math.max(prev - 1, 0));
+        if (activeSceneRef.current === TOTAL_SCENES - 1) {
+          triggerFlyHome()
+        } else {
+          navigateToScene(activeSceneRef.current + 1)
+        }
       }
-    };
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') navigateToScene(activeSceneRef.current - 1)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [navigateToScene, triggerFlyHome])
 
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, []);
-
+  // Glow orb
   useEffect(() => {
-    const glowOrb = document.querySelector('.glow-orb') as HTMLElement | null;
-    if (!glowOrb) return;
+    const orb = document.querySelector('.glow-orb') as HTMLElement | null
+    if (orb) {
+      const zone = activeScene < 2 ? 0 : activeScene === 4 ? 2 : activeScene < 6 ? 3 : 0
+      orb.className = `glow-orb glow-zone-${zone}`
+      const positions = [
+        { top: '42%', left: '50%' },   // 0 hero
+        { top: '55%', left: '38%' },   // 1 problem
+        { top: '48%', left: '58%' },   // 2 aghaaz fixes
+        { top: '50%', left: '52%' },   // 3 active learning
+        { top: '50%', left: '56%' },   // 4 blitz
+        { top: '52%', left: '50%' },   // 5 pricing
+      ]
+      const p = positions[activeScene] ?? { top: '50%', left: '50%' }
+      orb.style.top = p.top
+      orb.style.left = p.left
+    }
+    // Secondary orb — only visible on scene 4 (Blitz)
+    const orb2 = document.querySelector('.glow-orb-2') as HTMLElement | null
+    if (orb2) {
+      orb2.style.opacity = activeScene === 4 ? '1' : '0'
+    }
+  }, [activeScene])
 
-    const zone =
-      activeScene < 2 ? 0 : activeScene < 4 ? 1 : activeScene < 6 ? 2 : 3;
-    glowOrb.className = `glow-orb glow-zone-${zone}`;
-
-    const positions: Record<number, { top: string; left: string }> = {
-      0: { top: '45%', left: '50%' },
-      1: { top: '55%', left: '40%' },
-      2: { top: '50%', left: '60%' },
-      3: { top: '40%', left: '45%' },
-      4: { top: '50%', left: '55%' },
-      5: { top: '52%', left: '50%' },
-      6: { top: '45%', left: '58%' },
-      7: { top: '48%', left: '50%' },
-    };
-
-    const pos = positions[activeScene] ?? { top: '50%', left: '50%' };
-    glowOrb.style.top = pos.top;
-    glowOrb.style.left = pos.left;
-  }, [activeScene]);
-
+  // Blitz language auto-cycle (scene 4)
   useEffect(() => {
-    const interval = setInterval(() => {
-      if (activeScene === 4) {
-        setChatLang((prev) => (prev === 'en' ? 'ur' : 'en'));
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [activeScene]);
+    if (activeScene !== 4) return
+    const cycle = setInterval(() => {
+      setBlitzVisible(false)
+      setTimeout(() => {
+        setBlitzLang(prev => prev === 'en' ? 'ur' : 'en')
+        setBlitzVisible(true)
+      }, 400)
+    }, 4000)
+    return () => clearInterval(cycle)
+  }, [activeScene])
+
+  const s = (i: number) => activeScene === i ? 'scene-wrapper scene-active' : 'scene-wrapper'
 
   return (
     <>
+      {/* Intro */}
+      {introVisible && (
+        <div id="intro-overlay" className="intro-overlay">
+          <div className="intro-wordmark">AGHAAZ</div>
+        </div>
+      )}
+
+      {/* Background */}
       <div className="aurora-bg">
         <div className="aurora-blob blob-1" />
         <div className="aurora-blob blob-2" />
@@ -163,253 +164,929 @@ export default function Home() {
         <div className="aurora-noise" />
       </div>
       <div className="stars" />
-      <div className="particles" />
-      <div className="glow-orb glow-zone-0" />
+      <div className="glow-orb glow-zone-0" style={{ top: '42%', left: '50%' }} />
+      <div className="glow-orb-2" style={{
+        position: 'fixed', width: 300, height: 300, borderRadius: '50%',
+        filter: 'blur(80px)', pointerEvents: 'none', zIndex: 1,
+        top: '65%', left: '25%', transform: 'translate(-50%,-50%)',
+        background: 'radial-gradient(circle, rgba(255,100,20,0.10) 0%, transparent 70%)',
+        transition: 'opacity 1.5s ease',
+        opacity: 0,
+      }} />
       <div className="vignette" />
 
-      <header className="fixed top-4 md:top-6 right-4 md:right-8 z-50 flex items-center gap-2">
-        <div className="glass-pill p-1 flex items-center gap-1 rounded-full">
-          <button
-            onClick={() => { setLang('en'); setChatLang('en'); }}
-            className={`px-3 py-1.5 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold transition-all duration-300 ${lang === 'en' ? 'bg-[#BFFF00] text-[#041a0e] shadow-[0_0_15px_rgba(191,255,0,0.3)]' : 'text-white/50 hover:text-white'}`}
-          >
-            EN
-          </button>
-          <button
-            onClick={() => { setLang('ur'); setChatLang('ur'); }}
-            className={`px-3 py-1.5 md:px-4 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold transition-all duration-300 ${lang === 'ur' ? 'bg-[#BFFF00] text-[#041a0e] shadow-[0_0_15px_rgba(191,255,0,0.3)]' : 'text-white/50 hover:text-white'}`}
-          >
-            اردو
-          </button>
-        </div>
-      </header>
-
-      <main className="relative z-10 w-full h-screen overflow-hidden" style={{ perspective: '1200px' }}>
-        <div className="progress-track">
-          {Array.from({ length: TOTAL_SCENES }).map((_, i) => (
-            <div key={i} className="progress-dot-wrap relative group">
-              <button
-                type="button"
-                className={`progress-dot ${i === activeScene ? 'active' : ''}`}
-                onClick={() => navigateToScene(i)}
-                aria-label={`Go to ${SCENE_NAMES[i]}`}
-              />
-              <div className="progress-dot-label absolute right-6 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-white/80 text-[10px] font-semibold tracking-wide whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                {SCENE_NAMES[i]}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {activeScene < TOTAL_SCENES - 1 && activeScene !== 6 && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1.5 pointer-events-none">
-            <span className="text-white/30 text-[9px] tracking-[0.3em] uppercase font-bold">
-              {lang === 'en' ? 'scroll' : 'سکرول'}
-            </span>
-            <div className="flex flex-col items-center gap-0.5">
-              <svg className="scroll-chevron scroll-chevron-1" width="18" height="11" viewBox="0 0 20 12" fill="none">
-                <path d="M2 2L10 10L18 2" stroke="#BFFF00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <svg className="scroll-chevron scroll-chevron-2" width="18" height="11" viewBox="0 0 20 12" fill="none">
-                <path d="M2 2L10 10L18 2" stroke="#BFFF00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
+      {/* Header */}
+      <div className="top-header">
+        <span className="wordmark">AGHAAZ</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="glass-pill p-1 flex items-center gap-1 rounded-full">
+            <button onClick={() => setLang('en')} className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all duration-300 ${lang==='en' ? 'bg-[#BFFF00] text-[#020b04]' : 'text-white/40 hover:text-white/70'}`}>EN</button>
+            <button onClick={() => setLang('ur')} className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all duration-300 ${lang==='ur' ? 'bg-[#BFFF00] text-[#020b04]' : 'text-white/40 hover:text-white/70'}`}>اردو</button>
           </div>
-        )}
+        </div>
+      </div>
 
-        {/* 0. HERO SCENE */}
-        <section data-scene="0" className={`scene-wrapper ${activeScene === 0 ? 'scene-active' : 'hidden'}`}>
-          <div className="scene-inner text-center flex flex-col items-center justify-center gap-6 md:gap-8 px-4">
-            <div className="scene-text delay-1 flex flex-col items-center gap-3 md:gap-4">
-              <div className="w-16 h-16 md:w-24 md:h-24 bg-white/[0.02] border border-white/10 rounded-2xl md:rounded-3xl flex items-center justify-center shadow-2xl backdrop-blur-xl">
-                <img
-                  src="/aghaaz-logo.png"
-                  alt="Aghaaz"
-                  width={56}
-                  height={56}
-                  className="h-10 md:h-14 object-contain"
-                />
-              </div>
-              <p className="font-ethnocentric text-[8px] md:text-[10px] tracking-[0.4em] uppercase text-white/50">AGHAAZ</p>
-            </div>
-            {/* PERFORMANCE/MOBILE FIX: Adjusted text-7xl/100px to smaller breakpoints so it doesn't overflow mobile screens */}
-            <h1 className="scene-text delay-2 animated-headline-gradient text-4xl sm:text-5xl md:text-7xl lg:text-[88px] font-extrabold text-transparent bg-clip-text tracking-tighter leading-[1.1] md:leading-[1.05] headline-glow max-w-5xl pb-2">
-              {lang === 'en' ? 'The End of Boring Lectures.' : 'بورنگ لیکچرز کا خاتمہ۔'}
+      {/* Progress dots */}
+      <div className="progress-track">
+        {Array.from({ length: TOTAL_SCENES }).map((_, i) => (
+          <div key={i} className="progress-dot-wrap relative group">
+            <button className={`progress-dot ${i===activeScene ? 'active' : ''}`} onClick={() => navigateToScene(i)} aria-label={SCENE_NAMES[i]} />
+            <div className="progress-dot-label">{SCENE_NAMES[i]}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Scroll indicator */}
+      {activeScene > 0 && activeScene < TOTAL_SCENES - 1 && (
+        <div className="scroll-indicator">
+          <span className="scroll-label">{lang === 'en' ? 'scroll' : 'سکرول'}</span>
+          <div className="scroll-line" />
+        </div>
+      )}
+
+      <main className="relative z-10 w-full h-screen overflow-hidden">
+
+        {/* ── SCENE 0 — HERO ──────────────────────────────────── */}
+        <section className={s(0)}>
+          <div className="scene-inner flex flex-col items-center justify-center text-center gap-8 max-w-5xl mx-auto">
+            <h1
+              className={`scene-text delay-1 animated-headline headline-xl max-w-5xl ${lang === 'ur' ? 'urdu-text' : ''}`}
+              style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '0.2em' }}
+            >
+              {lang === 'en' ? (
+                <>
+                  <span>The End of</span>
+                  <br />
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.2em', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <span>Boring Lectures</span>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      WebkitTextFillColor: 'initial',
+                      animation: 'logo-float 3s ease-in-out infinite',
+                    }}>
+                      <img
+                        src="/aghaaz-logo.png"
+                        alt=""
+                        style={{
+                          height: '0.85em',
+                          width: 'auto',
+                          objectFit: 'contain',
+                          display: 'inline-block',
+                          verticalAlign: 'middle',
+                          borderRadius: '0.15em',
+                          filter: 'brightness(1.1)',
+                        }}
+                      />
+                    </span>
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span>بورنگ لیکچرز کا خاتمہ</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', WebkitTextFillColor: 'initial' }}>
+                    <img
+                      src="/aghaaz-logo.png"
+                      alt=""
+                      style={{ height: '0.85em', width: 'auto', objectFit: 'contain', borderRadius: '0.15em' }}
+                    />
+                  </span>
+                </>
+              )}
             </h1>
+
+            <p className={`scene-text delay-3 text-base md:text-xl text-white/40 font-medium max-w-xl leading-relaxed ${lang==='ur' ? 'urdu-text' : ''}`}>
+              {lang==='en'
+                ? '10-minute lessons. Built-in quizzes. AI tutoring. For Pakistani Matric & FSc students.'
+                : '10 منٹ کے اسباق۔ بلٹ ان کوئزز۔ AI ٹیوٹرنگ۔ پاکستانی میٹرک اور FSc طلباء کے لیے۔'}
+            </p>
+
+            <div className="scene-text delay-4" style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '0.875rem',
+              marginTop: '0.75rem',
+              width: '100%',
+              maxWidth: 440,
+              position: 'relative',
+            }}>
+
+              {/* Arrow — points at whichever button is active */}
+              <div className="neon-arrow" style={{
+                position: 'absolute',
+                left: -150,
+                top: watched ? 'calc(50% + 28px)' : 'calc(50% - 28px)',
+                transform: 'translateY(-50%)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                gap: 4,
+                transition: 'top 0.7s cubic-bezier(0.16,1,0.3,1)',
+                animation: 'arrow-float 1.6s ease-in-out infinite',
+                zIndex: 10,
+                pointerEvents: 'none',
+              }}>
+                <span style={{
+                  fontSize: 9,
+                  fontWeight: 800,
+                  letterSpacing: '0.15em',
+                  color: 'rgba(191,255,0,0.55)',
+                  textTransform: 'uppercase',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {watched ? 'enter here' : 'start here'}
+                </span>
+                <svg width="88" height="52" viewBox="0 0 88 52" fill="none">
+                  <path
+                    d="M 8 44 C 14 42, 28 36, 44 24 C 58 13, 70 9, 82 8"
+                    stroke="rgba(191,255,0,0.65)"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                  <path
+                    d="M 82 8 L 71 7 M 82 8 L 79 17"
+                    stroke="rgba(191,255,0,0.65)"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                </svg>
+              </div>
+
+              {/* What's Aghaaz? */}
+              <div style={{ position: 'relative', width: '100%' }}>
+                {!watched && (
+                  <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    borderRadius: 14,
+                    border: '1.5px solid rgba(191,255,0,0.7)',
+                    boxShadow: '0 0 12px rgba(191,255,0,0.4), 0 0 30px rgba(191,255,0,0.15), inset 0 0 12px rgba(191,255,0,0.05)',
+                    zIndex: 0,
+                    pointerEvents: 'none',
+                    animation: 'neon-pulse 2.5s ease-in-out infinite',
+                  }} />
+                )}
+                <button
+                  onClick={() => triggerFlyIn()}
+                  style={{
+                    position: 'relative',
+                    zIndex: 1,
+                    width: '100%',
+                    padding: '15px 32px',
+                    borderRadius: 13,
+                    border: watched ? '0.5px solid rgba(255,255,255,0.08)' : 'none',
+                    background: watched ? 'rgba(255,255,255,0.03)' : '#060f08',
+                    color: watched ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.85)',
+                    fontWeight: 700,
+                    fontSize: 'clamp(0.9rem, 2.5vw, 1rem)',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    letterSpacing: '0.01em',
+                    transition: 'all 0.5s ease',
+                  }}
+                >
+                  {lang === 'en' ? "What's Aghaaz?" : 'آغاز کیا ہے؟'}
+                </button>
+              </div>
+
+              {/* Aghaaz Space */}
+              <div style={{ position: 'relative', width: '100%' }}>
+                {watched && (
+                  <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    borderRadius: 14,
+                    border: '1.5px solid rgba(191,255,0,0.7)',
+                    boxShadow: '0 0 12px rgba(191,255,0,0.4), 0 0 30px rgba(191,255,0,0.15), inset 0 0 12px rgba(191,255,0,0.05)',
+                    zIndex: 0,
+                    pointerEvents: 'none',
+                    animation: 'neon-pulse 2.5s ease-in-out infinite',
+                  }} />
+                )}
+                <a
+                  href="/player"
+                  style={{
+                    position: 'relative',
+                    zIndex: 1,
+                    width: '100%',
+                    padding: '15px 32px',
+                    borderRadius: 13,
+                    border: watched ? 'none' : '0.5px solid rgba(255,255,255,0.08)',
+                    background: watched ? '#060f08' : 'rgba(255,255,255,0.02)',
+                    color: watched ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.2)',
+                    fontWeight: 700,
+                    fontSize: 'clamp(0.9rem, 2.5vw, 1rem)',
+                    cursor: watched ? 'pointer' : 'default',
+                    fontFamily: 'inherit',
+                    letterSpacing: '0.01em',
+                    transition: 'all 0.5s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textDecoration: 'none',
+                  }}
+                >
+                  {lang === 'en' ? 'Aghaaz Space →' : 'آغاز اسپیس →'}
+                </a>
+              </div>
+
+            </div>
           </div>
         </section>
 
-        {/* 1. THE PROBLEM */}
-        <section data-scene="1" className={`scene-wrapper ${activeScene === 1 ? 'scene-active' : 'hidden'}`}>
-          <div className="scene-inner text-center flex flex-col items-center justify-center gap-4 md:gap-6 max-w-4xl px-4">
-            <p className="scene-text delay-1 eyebrow">{lang === 'en' ? 'Pakistan has a broken education system' : 'پاکستان کا تعلیمی نظام خراب ہے'}</p>
-            <h2 className={`scene-text delay-2 text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.2] md:leading-[1.15] ${lang === 'ur' ? 'urdu-text' : ''}`}>
-              {lang === 'en' ? 'For years, students in Pakistan have been stuck with boring 40-minute lectures.' : 'برسوں سے پاکستان کے طلبا بورنگ لیکچرز میں پھنسے ہوئے ہیں'}
+        {/* ── SCENE 1 — THE PROBLEM ───────────────────────────── */}
+        <section className={s(1)}>
+          {(() => {
+            const line1Text = lang === 'en'
+              ? 'Students are stuck with 40-minute lectures.'
+              : 'طلباء 40 منٹ کے لیکچرز میں پھنسے ہیں۔'
+            const line2Text = lang === 'en'
+              ? 'Attention drops after 10 minutes. The student loses focus.'
+              : 'توجہ 10 منٹ بعد کم ہو جاتی ہے۔ طالب علم توجہ کھو دیتا ہے۔'
+            const line1WordCount = line1Text.split(' ').length
+            const line2Start = 0.4 + line1WordCount * 0.12 + 1.1
+            const dividerDelay = 0.4 + line1WordCount * 0.12 + 0.9
+            return (
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'stretch',
+                justifyContent: 'center',
+              }}>
+
+                {/* Top half — Line 1 */}
+                <div style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'flex-end',
+                  justifyContent: 'center',
+                  paddingBottom: 'clamp(1.25rem, 4vw, 3rem)',
+                  paddingLeft: '6vw',
+                  paddingRight: '6vw',
+                }}>
+                  <h2 style={{
+                    fontSize: 'clamp(2.4rem, 5.5vw, 5.5rem)',
+                    fontWeight: 800,
+                    letterSpacing: '-0.03em',
+                    lineHeight: 1.1,
+                    textAlign: 'center',
+                    margin: 0,
+                    maxWidth: '100%',
+                  }}>
+                    {line1Text.split(' ').map((word, i, arr) => {
+                      const lightStart = 0.4 + i * 0.12
+                      const dimStart = 0.4 + arr.length * 0.12 + 0.4
+                      return (
+                        <span key={i} style={{ display: 'inline-block', marginRight: '0.28em' }}>
+                          <span style={{
+                            color: 'rgba(255,255,255,0.12)',
+                            display: 'inline-block',
+                            animation: activeScene === 1
+                              ? `word-light-up 0.35s ease ${lightStart}s forwards, word-dim-down 0.6s ease ${dimStart}s forwards`
+                              : 'none',
+                            textShadow: 'none',
+                          }}>
+                            {word}
+                          </span>
+                        </span>
+                      )
+                    })}
+                  </h2>
+                </div>
+
+                {/* Divider */}
+                <div style={{
+                  height: '0.5px',
+                  background: 'rgba(255,255,255,0)',
+                  margin: '0 6vw',
+                  animation: activeScene === 1
+                    ? `divider-appear 0.5s ease ${dividerDelay}s forwards`
+                    : 'none',
+                }} />
+
+                {/* Bottom half — Line 2 */}
+                <div style={{
+                  flex: 1,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'center',
+                  paddingTop: 'clamp(1.25rem, 4vw, 3rem)',
+                  paddingLeft: '6vw',
+                  paddingRight: '6vw',
+                }}>
+                  <h2 style={{
+                    fontSize: 'clamp(2.4rem, 5.5vw, 5.5rem)',
+                    fontWeight: 800,
+                    letterSpacing: '-0.03em',
+                    lineHeight: 1.1,
+                    textAlign: 'center',
+                    margin: 0,
+                    maxWidth: '100%',
+                  }}>
+                    {line2Text.split(' ').map((word, i) => {
+                      const lightStart = line2Start + i * 0.12
+                      return (
+                        <span key={i} style={{ display: 'inline-block', marginRight: '0.28em' }}>
+                          <span style={{
+                            color: 'rgba(255,255,255,0.12)',
+                            display: 'inline-block',
+                            animation: activeScene === 1
+                              ? `word-light-up 0.35s ease ${lightStart}s forwards`
+                              : 'none',
+                          }}>
+                            {word}
+                          </span>
+                        </span>
+                      )
+                    })}
+                  </h2>
+                </div>
+
+              </div>
+            )
+          })()}
+        </section>
+
+        {/* ── SCENE 2 — AGHAAZ FIXES THIS ─────────────────────── */}
+        <section className={s(2)}>
+          <div className="scene-inner flex flex-col items-center justify-center text-center gap-8 max-w-5xl mx-auto">
+            <h2 className={`scene-text delay-2 headline-xl ${lang==='ur' ? 'urdu-text' : ''}`} style={{
+              background: 'linear-gradient(135deg, #BFFF00 0%, #ffffff 55%, #BFFF00 100%)',
+              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+              filter: 'drop-shadow(0 0 40px rgba(191,255,0,0.2))',
+            }}>
+              {lang==='en' ? 'Aghaaz fixes this.' : 'آغاز اسے ٹھیک کرتا ہے۔'}
             </h2>
-          </div>
-        </section>
+            <div className="scene-text delay-3" style={{
+              width: '100%',
+              maxWidth: 540,
+              margin: '0 auto',
+              background: 'rgba(12,28,16,0.45)',
+              backdropFilter: 'blur(24px)',
+              border: '0.5px solid rgba(255,255,255,0.07)',
+              borderRadius: 20,
+              padding: 'clamp(1.25rem, 3vw, 2rem)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem',
+            }}>
 
-        {/* 2. THE FIX (BARS) */}
-        <section data-scene="2" className={`scene-wrapper ${activeScene === 2 ? 'scene-active' : 'hidden'}`}>
-          <div className="scene-inner text-center flex flex-col items-center justify-center gap-6 md:gap-10 max-w-5xl px-4">
-            <div className="space-y-2 md:space-y-4">
-              <p className="scene-text delay-1 eyebrow">{lang === 'en' ? 'Aghaaz fixes this' : 'آغاز اسے ٹھیک کرتا ہے'}</p>
-              <h2 className={`scene-text delay-2 text-3xl sm:text-4xl md:text-6xl font-bold text-white tracking-tight leading-[1.1] ${lang === 'ur' ? 'urdu-text' : ''}`}>
-                {lang === 'en' ? 'Every topic. Broken into 10-minute lessons.' : 'ہر ٹاپک، دس منٹ کے آسان اسباق میں۔'}
-              </h2>
-            </div>
-            
-            <div className="scene-text delay-4 w-full glass-card rounded-[1.5rem] md:rounded-[2rem] p-6 md:p-12 flex flex-col sm:flex-row items-center justify-between gap-6 md:gap-12 mt-2 md:mt-4">
-              <div className="w-full text-center sm:text-left">
-                <p className="text-white/40 text-[9px] md:text-[10px] font-bold tracking-[0.2em] uppercase mb-3 md:mb-4">Before</p>
-                <div className="w-full h-2 md:h-3 rounded-full bg-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.4)]" />
-                <p className="text-white/60 text-xs md:text-sm mt-3 md:mt-4 font-medium">40 min lecture</p>
+              {/* Before */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <span style={{
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.25em',
+                  color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase',
+                }}>Before</span>
+                <div style={{
+                  height: 10, borderRadius: 5,
+                  background: 'rgba(239,68,68,0.75)',
+                  boxShadow: '0 0 20px rgba(239,68,68,0.35)',
+                }} />
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
+                  40 min lecture
+                </span>
               </div>
-              <div className="hidden sm:block text-[#BFFF00]/30 text-3xl font-light">→</div>
-              <div className="w-full text-center sm:text-left">
-                <p className="text-[#BFFF00] text-[9px] md:text-[10px] font-bold tracking-[0.2em] uppercase mb-3 md:mb-4">With Aghaaz</p>
-                <div className="flex gap-2 md:gap-3">
-                  {[1,2,3,4].map(i => <div key={i} className="h-2 md:h-3 w-1/4 rounded-full bg-[#BFFF00] shadow-[0_0_20px_rgba(191,255,0,0.5)] bar-short" />)}
-                </div>
-                <p className="text-white/80 text-xs md:text-sm mt-3 md:mt-4 font-medium">10 min each · 4 lessons</p>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* 3. THE QUIZZES */}
-        <section data-scene="3" className={`scene-wrapper ${activeScene === 3 ? 'scene-active' : 'hidden'}`}>
-          <div className="scene-inner text-center flex flex-col items-center justify-center gap-6 md:gap-10 max-w-6xl px-4">
-            <div className="space-y-2 md:space-y-4 max-w-3xl">
-              <p className="scene-text delay-1 eyebrow">{lang === 'en' ? 'Active questioning' : 'فعال سوالات'}</p>
-              <h2 className={`scene-text delay-2 text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-[1.1] ${lang === 'ur' ? 'urdu-text' : ''}`}>
-                {lang === 'en' ? 'Every lecture has a built-in quiz.' : 'ہر لیکچر کے اندر کوئز شامل ہے۔'}
-              </h2>
-            </div>
-            
-            <div className="scene-text delay-4 w-full grid grid-cols-3 md:grid-cols-3 gap-2 md:gap-6 mt-2 md:mt-4">
-              <div className="glass-card rounded-2xl md:rounded-3xl p-3 md:p-8 text-left transition-transform hover:-translate-y-2 hover:border-green-500/30">
-                <div className="inline-block px-2 py-0.5 md:px-3 md:py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-[9px] md:text-[10px] tracking-widest uppercase mb-2 md:mb-6 font-bold">Biology</div>
-                <p className="text-white text-xs md:text-lg font-medium mb-2 md:mb-6 leading-snug">What is the powerhouse of the cell?</p>
-                <div className="space-y-1.5 md:space-y-3">
-                  <div className="bg-white/5 border border-white/10 rounded-xl py-1.5 px-2 md:py-3.5 md:px-5 text-white/50 text-xs md:text-sm">Nucleus</div>
-                  <div className="bg-green-500/10 border border-green-500/30 rounded-xl py-1.5 px-2 md:py-3.5 md:px-5 text-green-400 text-xs md:text-sm font-medium flex justify-between items-center shadow-[0_0_15px_rgba(34,197,94,0.1)]">Mitochondria <span>✓</span></div>
-                </div>
+              {/* Divider with arrow */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+              }}>
+                <div style={{ flex: 1, height: '0.5px', background: 'rgba(255,255,255,0.06)' }} />
+                <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: 18, lineHeight: 1, transform: 'rotate(90deg)', display: 'block' }}>→</span>
+                <div style={{ flex: 1, height: '0.5px', background: 'rgba(255,255,255,0.06)' }} />
               </div>
-              <div className="glass-card rounded-2xl md:rounded-3xl p-3 md:p-8 text-left transition-transform hover:-translate-y-2 hover:border-blue-500/30">
-                <div className="inline-block px-2 py-0.5 md:px-3 md:py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[9px] md:text-[10px] tracking-widest uppercase mb-2 md:mb-6 font-bold">Physics</div>
-                <p className="text-white text-xs md:text-lg font-medium mb-2 md:mb-6 leading-snug">What is the SI unit of force?</p>
-                <div className="space-y-1.5 md:space-y-3">
-                  <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl py-1.5 px-2 md:py-3.5 md:px-5 text-blue-400 text-xs md:text-sm font-medium flex justify-between items-center shadow-[0_0_15px_rgba(59,130,246,0.1)]">Newton <span>✓</span></div>
-                  <div className="bg-white/5 border border-white/10 rounded-xl py-1.5 px-2 md:py-3.5 md:px-5 text-white/50 text-xs md:text-sm">Joule</div>
+
+              {/* After */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <span style={{
+                  fontSize: 9, fontWeight: 800, letterSpacing: '0.25em',
+                  color: '#BFFF00', textTransform: 'uppercase',
+                }}>With Aghaaz</span>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[1,2,3,4].map(i => (
+                    <div key={i} className="bar-short" style={{
+                      height: 10, flex: 1, borderRadius: 5,
+                      background: '#BFFF00',
+                      boxShadow: '0 0 14px rgba(191,255,0,0.45)',
+                    }} />
+                  ))}
                 </div>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', fontWeight: 500 }}>
+                  10 min each · 4 lessons
+                </span>
               </div>
-              <div className="glass-card rounded-2xl md:rounded-3xl p-3 md:p-8 text-left transition-transform hover:-translate-y-2 hover:border-purple-500/30">
-                <div className="inline-block px-2 py-0.5 md:px-3 md:py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[9px] md:text-[10px] tracking-widest uppercase mb-2 md:mb-6 font-bold">Mathematics</div>
-                <p className="text-white text-xs md:text-lg font-medium mb-2 md:mb-6 leading-snug">What is the value of sin(90°)?</p>
-                <div className="space-y-1.5 md:space-y-3">
-                  <div className="bg-white/5 border border-white/10 rounded-xl py-1.5 px-2 md:py-3.5 md:px-5 text-white/50 text-xs md:text-sm">0</div>
-                  <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl py-1.5 px-2 md:py-3.5 md:px-5 text-purple-400 text-xs md:text-sm font-medium flex justify-between items-center shadow-[0_0_15px_rgba(168,85,247,0.1)]">1 <span>✓</span></div>
-                </div>
-              </div>
+
             </div>
           </div>
         </section>
 
-        {/* 4. BLITZ AI */}
-        <section data-scene="4" className={`scene-wrapper ${activeScene === 4 ? 'scene-active' : 'hidden'}`}>
-          <div className="scene-inner text-center flex flex-col items-center justify-center gap-6 md:gap-10 max-w-4xl px-4">
-            <div className="space-y-2 md:space-y-4">
-              <p className="scene-text delay-1 eyebrow">{lang === 'en' ? "A personal tutor that doesn't get angry at you" : 'ایک ذاتی ٹیوٹر جو آپ پر غصہ نہیں کرتا'}</p>
-              <h2 className={`scene-text delay-2 text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-[1.1] ${lang === 'ur' ? 'urdu-text' : ''}`}>
-                {lang === 'en' ? 'Meet Blitz. Your AI tutor trained on every Matric and FSc exam.' : 'بلٹز سے ملو، تمہارا AI ٹیوٹر جو میٹرک اور ایف ایس سی کے ہر امتحان پر تیار ہے۔'}
+        {/* ── SCENE 3 — ACTIVE LEARNING ───────────────────────────────── */}
+        <section className={s(3)}>
+          <div className="scene-inner flex flex-col items-center justify-center gap-8 max-w-3xl mx-auto" style={{ padding: '0 2rem' }}>
+
+            {/* Headline */}
+            <div style={{ textAlign: 'center' }}>
+              <h2 className={`scene-text delay-1 ${lang === 'ur' ? 'urdu-text' : ''}`} style={{
+                fontSize: 'clamp(2.2rem, 5.5vw, 5rem)',
+                fontWeight: 900,
+                letterSpacing: '-0.04em',
+                lineHeight: 1.05,
+                margin: 0,
+              }}>
+                <span style={{ color: 'white' }}>
+                  {lang === 'en' ? <>Aghaaz turns passive<br />learning into </> : 'آغاز غیر فعال سیکھنے کو '}
+                </span>
+                <span style={{
+                  background: 'linear-gradient(135deg, #BFFF00, #ffffff)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>
+                  {lang === 'en' ? 'active.' : 'فعال بناتا ہے۔'}
+                </span>
               </h2>
             </div>
-            
-            <div className="scene-text delay-4 w-full max-w-2xl glass-card rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-8 text-left relative overflow-hidden shadow-2xl">
-              <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#BFFF00] to-transparent opacity-30"></div>
-              
-              <div className="flex justify-between items-center mb-6 md:mb-8">
-                <div className="flex items-center gap-2 md:gap-3">
-                  <div className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-[#BFFF00]/10 border border-[#BFFF00]/20 flex items-center justify-center text-sm md:text-lg shadow-[0_0_15px_rgba(191,255,0,0.1)]">⚡</div>
-                  <p className="text-white font-semibold text-xs md:text-sm">Blitz AI</p>
-                </div>
-                <div className="flex gap-1 md:gap-2 bg-white/5 p-1 rounded-full border border-white/10">
-                  <button onClick={() => setChatLang('en')} className={`text-[8px] md:text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 md:px-4 md:py-1.5 rounded-full transition-all ${chatLang === 'en' ? 'bg-[#BFFF00] text-[#041a0e] shadow-[0_0_10px_rgba(191,255,0,0.3)]' : 'text-white/40 hover:text-white'}`}>ENG</button>
-                  <button onClick={() => setChatLang('ur')} className={`text-[8px] md:text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 md:px-4 md:py-1.5 rounded-full transition-all ${chatLang === 'ur' ? 'bg-[#BFFF00] text-[#041a0e] shadow-[0_0_10px_rgba(191,255,0,0.3)]' : 'text-white/40 hover:text-white'}`}>URDU</button>
-                </div>
-              </div>
 
-              <div className="space-y-4 md:space-y-5">
-                <div className="flex justify-end chat-bubble">
-                  <div className="bg-white/5 border border-white/10 rounded-2xl rounded-tr-sm py-2 px-4 md:py-3 md:px-5 text-white/80 text-xs md:text-sm max-w-[85%]">
-                    {chatLang === 'en' ? "I don't understand Newton's third law" : "mujhe newton ka teesra law samajh nahi araha"}
+            {/* Scrimba-style player + quiz overlay */}
+            <div className="scene-text delay-2" style={{ width: '100%', position: 'relative' }}>
+
+              {/* Video player mockup */}
+              <div style={{
+                width: '100%',
+                background: '#000',
+                borderRadius: 16,
+                overflow: 'hidden',
+                border: '0.5px solid rgba(255,255,255,0.08)',
+                boxShadow: '0 32px 64px rgba(0,0,0,0.6)',
+              }}>
+
+                {/* Player top bar */}
+                <div style={{
+                  padding: '10px 14px',
+                  background: '#111',
+                  borderBottom: '0.5px solid rgba(255,255,255,0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ display: 'flex', gap: 5 }}>
+                      {['#ff5f57','#ffbd2e','#28c840'].map(c => (
+                        <div key={c} style={{ width: 10, height: 10, borderRadius: '50%', background: c, opacity: 0.7 }} />
+                      ))}
+                    </div>
+                    <span style={{
+                      fontSize: 11, fontWeight: 600,
+                      color: 'rgba(255,255,255,0.4)', marginLeft: 6,
+                    }}>
+                      {lang === 'en' ? '9th Biology · Chapter 4 · Topic 3' : '9 ویں جماعت حیاتیات · باب 4 · موضوع 3'}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', fontWeight: 600 }}>2:14 / 9:45</span>
+                </div>
+
+                {/* Video area — quiz overlaid on top */}
+                <div style={{
+                  width: '100%',
+                  aspectRatio: '16/8',
+                  background: 'linear-gradient(160deg, #0a1a0c 0%, #060e07 100%)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}>
+                  {/* Subtle grid */}
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    backgroundImage: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, transparent 1px, transparent 28px), repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0px, transparent 1px, transparent 28px)',
+                  }} />
+
+                  {/* Paused play button — dimmed since quiz is showing */}
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    opacity: 0.25,
+                  }}>
+                    <div style={{
+                      width: 48, height: 48, borderRadius: '50%',
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '0.5px solid rgba(255,255,255,0.15)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <div style={{
+                        width: 0, height: 0,
+                        borderTop: '9px solid transparent',
+                        borderBottom: '9px solid transparent',
+                        borderLeft: '16px solid rgba(255,255,255,0.6)',
+                        marginLeft: 3,
+                      }} />
+                    </div>
+                  </div>
+
+                  {/* Dark blur overlay — behind quiz */}
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'rgba(0,0,0,0.72)',
+                    backdropFilter: 'blur(6px)',
+                    WebkitBackdropFilter: 'blur(6px)',
+                  }} />
+
+                  {/* Quiz card — centered on video */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%', left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: 'min(420px, 88%)',
+                    background: '#061a0a',
+                    border: '0.5px solid rgba(191,255,0,0.18)',
+                    borderRadius: 14,
+                    overflow: 'hidden',
+                    boxShadow: '0 0 40px rgba(0,0,0,0.5), 0 0 0 0.5px rgba(191,255,0,0.06) inset',
+                  }}>
+                    <div style={{
+                      height: 1,
+                      background: 'linear-gradient(90deg, transparent, rgba(191,255,0,0.3), transparent)',
+                    }} />
+
+                    <div style={{ padding: '14px 16px' }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center',
+                        justifyContent: 'space-between', marginBottom: 10,
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{
+                            width: 5, height: 5, borderRadius: '50%',
+                            background: '#BFFF00', boxShadow: '0 0 6px rgba(191,255,0,0.8)',
+                          }} />
+                          <span style={{
+                            fontSize: 9, fontWeight: 800, letterSpacing: '0.2em',
+                            color: 'var(--lime)', textTransform: 'uppercase',
+                          }}>
+                            {lang === 'en' ? '⚡ Checkpoint' : '⚡ چیک پوائنٹ'}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', fontWeight: 600 }}>
+                          {lang === 'en' ? '1 of 3' : '1 / 3'}
+                        </span>
+                      </div>
+
+                      <p style={{
+                        fontSize: 'clamp(0.85rem, 1.8vw, 1rem)',
+                        fontWeight: 700, color: 'white',
+                        lineHeight: 1.4, marginBottom: 10,
+                      }}>
+                        {lang === 'en'
+                          ? 'What is the powerhouse of the cell?'
+                          : 'خلیے کا پاور ہاؤس کیا ہے؟'}
+                      </p>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {[
+                          { text: lang === 'en' ? 'Nucleus' : 'نیوکلئس', state: 'wrong' as const },
+                          { text: lang === 'en' ? 'Mitochondria' : 'مائٹوکانڈریا', state: 'correct' as const },
+                          { text: lang === 'en' ? 'Ribosome' : 'رائبوزوم', state: 'default' as const },
+                        ].map(({ text, state }, i) => (
+                          <div key={i} style={{
+                            padding: '8px 12px', borderRadius: 7,
+                            fontSize: 12, fontWeight: 600,
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            border: state === 'correct'
+                              ? '0.5px solid rgba(34,197,94,0.45)'
+                              : state === 'wrong'
+                              ? '0.5px solid rgba(239,68,68,0.3)'
+                              : '0.5px solid rgba(255,255,255,0.07)',
+                            background: state === 'correct'
+                              ? 'rgba(34,197,94,0.10)'
+                              : state === 'wrong'
+                              ? 'rgba(239,68,68,0.08)'
+                              : 'rgba(255,255,255,0.03)',
+                            color: state === 'correct'
+                              ? '#4ade80'
+                              : state === 'wrong'
+                              ? 'rgba(239,68,68,0.65)'
+                              : 'rgba(255,255,255,0.4)',
+                          }}>
+                            <span>{text}</span>
+                            {state === 'correct' && <span>✓</span>}
+                            {state === 'wrong' && <span style={{ opacity: 0.5 }}>✗</span>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Timeline at bottom of video */}
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                    padding: '0 12px 10px',
+                    background: 'linear-gradient(transparent, rgba(0,0,0,0.5))',
+                  }}>
+                    <div style={{
+                      height: 3, borderRadius: 2,
+                      background: 'rgba(255,255,255,0.10)',
+                      position: 'relative',
+                    }}>
+                      <div style={{
+                        position: 'absolute', left: 0, top: 0, bottom: 0,
+                        width: '28%', background: '#BFFF00', borderRadius: 2,
+                      }} />
+                      <div style={{
+                        position: 'absolute', top: '50%', left: '28%',
+                        transform: 'translate(-50%, -50%) rotate(45deg)',
+                        width: 7, height: 7,
+                        background: '#BFFF00',
+                        boxShadow: '0 0 8px rgba(191,255,0,0.8)',
+                      }} />
+                    </div>
                   </div>
                 </div>
-                <div className="flex justify-start chat-bubble">
-                  <div className="bg-[#102a1c] border border-[#BFFF00]/20 rounded-2xl rounded-tl-sm py-3 px-4 md:py-4 md:px-5 text-white/95 text-xs md:text-sm max-w-[95%] md:max-w-[90%] leading-relaxed shadow-[0_0_20px_rgba(191,255,0,0.05)]">
-                    {chatLang === 'en' ? "Think of it this way — when you push a wall, the wall pushes back on your hand with the same force. That's why your hand hurts! The forces are equal and opposite. 🧱" : "Socho aise — jab aap deewar ko dhakelte hain, deewar aap ke haath par usi qawat se wapas dhakelti hai. Isi liye haath dard karta hai! Qawatein barabar aur mukhalif hain. 🧱"}
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* ── SCENE 4 — BLITZ AI ──────────────────────────────── */}
+        <section className={s(4)}>
+          <div className="scene-inner flex flex-col items-center justify-center gap-6 max-w-3xl mx-auto" style={{ padding: '0 2rem' }}>
+
+            <div style={{ textAlign: 'center' }}>
+              <div className="scene-text delay-1">
+                <h2 style={{
+                  fontSize: 'clamp(3.5rem, 9vw, 8.5rem)',
+                  fontWeight: 900,
+                  letterSpacing: '-0.04em',
+                  lineHeight: 1,
+                  margin: '0 0 0.3em 0',
+                }}>
+                  <span style={{ color: 'white' }}>{lang === 'en' ? 'Meet ' : 'ملیں '}</span>
+                  <span className="blitz-gradient-text" style={{ fontSize: 'inherit', fontWeight: 900 }}>{lang === 'en' ? 'Blitz.' : 'بلٹز۔'}</span>
+                </h2>
+              </div>
+
+              <p className={`scene-text delay-2 ${lang === 'ur' ? 'urdu-text' : ''}`} style={{
+                fontSize: 'clamp(1.1rem, 2.8vw, 2rem)',
+                fontWeight: 700,
+                letterSpacing: '-0.02em',
+                color: 'rgba(255,255,255,0.45)',
+                margin: '0 0 0.2em 0',
+                lineHeight: 1.2,
+              }}>
+                {lang === 'en' ? 'Your personal AI tutor.' : 'آپ کا ذاتی AI استاد۔'}
+              </p>
+
+              <p className={`scene-text delay-3 ${lang === 'ur' ? 'urdu-text' : ''}`} style={{
+                fontSize: 'clamp(0.85rem, 1.8vw, 1.3rem)',
+                fontWeight: 500,
+                letterSpacing: '0.01em',
+                color: 'rgba(255,255,255,0.18)',
+                margin: 0,
+                lineHeight: 1.2,
+              }}>
+                {lang === 'en' ? 'Trained for Matric and FSc.' : 'میٹرک اور FSc کے لیے تیار۔'}
+              </p>
+            </div>
+
+            {/* Blitz card */}
+            <div className="scene-text delay-3" style={{ width: '100%' }}>
+              <div style={{
+                background: 'rgba(15, 8, 2, 0.75)',
+                backdropFilter: 'blur(40px)',
+                WebkitBackdropFilter: 'blur(40px)',
+                border: '0.5px solid rgba(255,149,0,0.22)',
+                borderRadius: 24,
+                overflow: 'hidden',
+                boxShadow: '0 0 80px rgba(255,100,20,0.10), 0 0 0 0.5px rgba(255,149,0,0.08) inset, 0 32px 64px rgba(0,0,0,0.5)',
+                position: 'relative',
+              }}>
+                {/* Top shimmer */}
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+                  background: 'linear-gradient(90deg, transparent, rgba(255,149,0,0.5), transparent)',
+                }} />
+
+                {/* Card header */}
+                <div style={{
+                  padding: 'clamp(12px, 3vw, 18px) clamp(14px, 4vw, 22px)',
+                  borderBottom: '0.5px solid rgba(255,149,0,0.10)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 12,
+                      background: 'linear-gradient(135deg, #FF6B35, #FF9500, #FFB800)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 18,
+                      boxShadow: '0 0 24px rgba(255,149,0,0.4), 0 4px 12px rgba(0,0,0,0.3)',
+                    }}>⚡</div>
+                    <div>
+                      <p className="blitz-gradient-text" style={{ fontSize: 15, fontWeight: 800, lineHeight: 1.2, margin: 0 }}>Blitz</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
+                        <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', margin: 0 }}>AI Tutor · always on</p>
+                      </div>
+                    </div>
                   </div>
+                  {/* Language indicator — auto cycles */}
+                  <div style={{
+                    fontSize: 10, fontWeight: 700, letterSpacing: '0.08em',
+                    padding: '4px 12px', borderRadius: 999,
+                    background: 'rgba(255,149,0,0.12)',
+                    border: '0.5px solid rgba(255,149,0,0.25)',
+                    color: '#FF9500',
+                    transition: 'opacity 0.3s ease',
+                  }}>
+                    {blitzLang === 'en' ? 'EN' : 'اردو'}
+                  </div>
+                </div>
+
+                {/* Chat content — fades when switching language */}
+                <div style={{
+                  padding: '20px 22px',
+                  display: 'flex', flexDirection: 'column', gap: 12,
+                  opacity: blitzVisible ? 1 : 0,
+                  transition: 'opacity 0.4s ease',
+                  minHeight: 180,
+                }}>
+                  {/* User question */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{
+                      background: 'rgba(255,255,255,0.06)',
+                      border: '0.5px solid rgba(255,255,255,0.09)',
+                      borderRadius: '16px 16px 4px 16px',
+                      padding: '11px 16px',
+                      fontSize: 13, lineHeight: 1.55,
+                      color: 'rgba(255,255,255,0.72)',
+                      maxWidth: '88%',
+                    }}>
+                      {blitzLang === 'en'
+                        ? 'How many times has this question appeared in the board exam?'
+                        : 'یہ سوال بورڈ امتحان میں کتنی بار آیا ہے؟'}
+                    </div>
+                  </div>
+
+                  {/* Blitz answer */}
+                  <div style={{ display: 'flex', justifyContent: 'flex-start', gap: 10 }}>
+                    <div style={{
+                      width: 28, height: 28, borderRadius: 8, flexShrink: 0,
+                      background: 'linear-gradient(135deg,#FF6B35,#FFB800)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 13, marginTop: 2,
+                      boxShadow: '0 0 12px rgba(255,149,0,0.3)',
+                    }}>⚡</div>
+                    <div style={{
+                      background: 'rgba(30, 14, 4, 0.92)',
+                      border: '0.5px solid rgba(255,149,0,0.25)',
+                      borderRadius: '4px 16px 16px 16px',
+                      padding: '11px 16px',
+                      fontSize: 13, lineHeight: 1.65,
+                      color: 'rgba(255,255,255,0.88)',
+                      maxWidth: '88%',
+                      boxShadow: '0 0 30px rgba(255,100,0,0.07)',
+                      position: 'relative', overflow: 'hidden',
+                    }}>
+                      {/* Inner glow top */}
+                      <div style={{
+                        position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+                        background: 'linear-gradient(90deg, transparent, rgba(255,149,0,0.25), transparent)',
+                      }} />
+                      {blitzLang === 'en'
+                        ? <span>This topic — Newton&apos;s Third Law — has appeared <strong style={{color:'#FFB800'}}>4 times out of the last 10</strong> federal board papers. It&apos;s almost guaranteed. Learn it well. 📋<span className="blitz-cursor" /></span>
+                        : <span>یہ ٹاپک — نیوٹن کا تیسرا قانون — وفاقی بورڈ کے <strong style={{color:'#FFB800'}}>گزشتہ 10 میں سے 4</strong> پرچوں میں آیا ہے۔ یہ تقریباً یقینی ہے۔ اسے اچھی طرح سیکھیں۔ 📋<span className="blitz-cursor" /></span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom bar — stat strip */}
+                <div style={{
+                  borderTop: '0.5px solid rgba(255,149,0,0.08)',
+                  padding: 'clamp(10px, 2.5vw, 12px) clamp(14px, 4vw, 22px)',
+                  display: 'flex', alignItems: 'center', gap: 'clamp(8px, 3vw, 20px)',
+                }}>
+                  {[
+                    { label: lang === 'en' ? 'Board topics covered' : 'بورڈ ٹاپکس', value: '100%' },
+                    { label: lang === 'en' ? 'Past papers analysed' : 'پرانے پرچے', value: '10 yrs' },
+                    { label: lang === 'en' ? 'Response time' : 'جواب کا وقت', value: '<2s' },
+                  ].map(({ label, value }) => (
+                    <div key={label} style={{ flex: 1, textAlign: 'center' }}>
+                      <p style={{ fontSize: 'clamp(13px, 3.5vw, 16px)', fontWeight: 800, color: '#FF9500', margin: 0, letterSpacing: '-0.01em' }}>{value}</p>
+                      <p style={{ fontSize: 'clamp(8px, 2vw, 9px)', color: 'rgba(255,255,255,0.25)', margin: 0, marginTop: 2, letterSpacing: '0.04em', textTransform: 'uppercase', fontWeight: 600 }}>{label}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
+
           </div>
         </section>
 
-        {/* 5. THE PRICE */}
-        <section data-scene="5" className={`scene-wrapper ${activeScene === 5 ? 'scene-active' : 'hidden'}`}>
-          <div className="scene-inner text-center flex flex-col items-center justify-center gap-4 md:gap-6 max-w-4xl px-4">
-            <p className="scene-text delay-1 eyebrow">{lang === 'en' ? 'THE PRICE' : 'قیمت'}</p>
-            <p className="scene-text delay-2 crossed-price text-xl md:text-3xl font-medium text-white/30 tracking-tight">
-              {lang === 'en' ? 'PKR 12,000/month' : '12,000 روپے ماہانہ'}
-            </p>
-            {/* PERFORMANCE/MOBILE FIX: Ensure text fits mobile screen without scrolling */}
-            <h2 className={`real-price delay-3 text-5xl sm:text-6xl md:text-[100px] font-extrabold tracking-tighter text-white drop-shadow-[0_0_60px_rgba(255,255,255,0.15)] ${lang === 'ur' ? 'urdu-text' : ''}`}>
-              {lang === 'en' ? 'PKR 2,000/mo' : 'صرف دو ہزار ماہانہ'}
-            </h2>
-            <p className={`scene-text delay-5 text-sm sm:text-base md:text-xl text-white/50 mt-2 md:mt-4 font-medium tracking-tight ${lang === 'ur' ? 'urdu-text' : ''}`}>
-              {lang === 'en' ? 'All subjects. All quizzes. Blitz included. Cancel anytime.' : 'تمام مضامین۔ تمام کوئزز۔ بلٹز شامل۔ کبھی بھی بند کرو۔'}
-            </p>
-          </div>
-        </section>
+        {/* ── SCENE 5 — PRICING ───────────────────────────────── */}
+        <section className={s(5)}>
+          <div className="scene-inner flex flex-col items-center justify-center text-center gap-0 max-w-4xl mx-auto" style={{ padding: '0 2rem' }}>
 
-        {/* 6. INLINE DEMO PLAYER (Starry Core) */}
-        <section data-scene="6" className={`scene-wrapper ${activeScene === 6 ? 'scene-active' : 'hidden'}`}>
-          <div className="scene-inner text-center flex flex-col items-center justify-center gap-4 md:gap-6 max-w-6xl w-full px-2 md:px-6">
-            <div className="space-y-1 md:space-y-2">
-              <h2 className={`scene-text delay-2 text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight leading-[1.1] ${lang === 'ur' ? 'urdu-text' : ''}`}>
-                {lang === 'en' ? 'See what an Aghaaz lesson feels like.' : 'دیکھو آغاز کا سبق کیسا ہوتا ہے۔'}
+            {/* "All of this." */}
+            <p className="scene-text delay-1" style={{
+              fontSize: 'clamp(1rem, 2vw, 1.4rem)',
+              fontWeight: 500,
+              color: 'rgba(255,255,255,0.3)',
+              letterSpacing: '0.04em',
+              marginBottom: '1.2rem',
+            }}>
+              {lang === 'en' ? 'All of this.' : 'یہ سب کچھ۔'}
+            </p>
+
+            {/* Crossed price */}
+            <div className="scene-text delay-2" style={{
+              position: 'relative',
+              display: 'inline-block',
+              marginBottom: '0.75rem',
+            }}>
+              <span style={{
+                fontSize: 'clamp(1rem, 2.2vw, 1.5rem)',
+                color: 'rgba(255,255,255,0.18)',
+                fontWeight: 500,
+                letterSpacing: '-0.01em',
+              }}>
+                {lang === 'en' ? 'PKR 12,000/month' : '12,000 روپے ماہانہ'}
+              </span>
+              <div className="crossed-price" style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0, bottom: 0,
+                display: 'flex', alignItems: 'center',
+              }}>
+                <div style={{
+                  height: '1.5px',
+                  background: 'rgba(239,68,68,0.8)',
+                  width: 0,
+                  transition: 'width 0.8s ease 0.5s',
+                  ...(activeScene === 5 ? { width: '100%' } : {}),
+                }} />
+              </div>
+            </div>
+
+            {/* Big price — lime gradient */}
+            <div className="real-price" style={{ marginBottom: '1.5rem' }}>
+              <h2 style={{
+                fontSize: 'clamp(5rem, 18vw, 14rem)',
+                fontWeight: 900,
+                letterSpacing: '-0.05em',
+                lineHeight: 0.9,
+                margin: 0,
+                background: 'linear-gradient(160deg, #ffffff 0%, #e8ffb0 40%, #BFFF00 70%, #ffffff 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: 'drop-shadow(0 0 60px rgba(191,255,0,0.25))',
+              }}>
+                {lang === 'en' ? 'PKR\n2,000' : 'دو\nہزار'}
               </h2>
             </div>
-            
-            <div className="scene-text delay-3 w-full mt-4 md:mt-8 flex justify-center">
-              {/* PERFORMANCE FIX: Pass isActive prop so video doesn't load network requests immediately */}
-              <EmbeddedDemo
-                lang={lang}
-                isActive={activeScene === 6}
-                onComplete={() => setActiveScene(7)}
-              />
-            </div>
+
+            {/* Supporting line */}
+            <p className="scene-text delay-5" style={{
+              fontSize: 'clamp(0.8rem, 1.5vw, 1rem)',
+              color: 'rgba(255,255,255,0.22)',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              fontWeight: 600,
+              margin: 0,
+            }}>
+              {lang === 'en'
+                ? 'per month · all subjects · Blitz AI · cancel anytime'
+                : 'ماہانہ · تمام مضامین · بلٹز AI · کبھی بھی بند کریں'}
+            </p>
+
           </div>
         </section>
 
-        {/* 7. FINAL CTA */}
-        <section data-scene="7" className={`scene-wrapper ${activeScene === 7 ? 'scene-active' : 'hidden'}`}>
-          <div className="scene-inner text-center flex flex-col items-center justify-center gap-8 md:gap-10 max-w-4xl px-4">
-            <h2 className={`scene-text delay-1 text-5xl sm:text-6xl md:text-[100px] font-extrabold text-white tracking-tighter leading-[1.05] headline-glow ${lang === 'ur' ? 'urdu-text' : ''}`}>
-              {lang === 'en' ? 'Ready to start?' : 'شروع کریں؟'}
-            </h2>
-            <div className="scene-text delay-2 flex flex-col items-center gap-4 md:gap-6 mt-2 md:mt-4">
-              <a href="/signup" className="bg-[#BFFF00] text-[#041a0e] font-extrabold px-8 py-4 md:px-12 md:py-5 rounded-2xl hover:shadow-[0_0_50px_rgba(191,255,0,0.4)] transition-all duration-300 text-lg md:text-2xl tracking-tight transform hover:-translate-y-1 w-full sm:w-auto text-center">
-                {lang === 'en' ? 'Start Learning for PKR 2,000/mo' : 'سیکھنا شروع کریں →'}
-              </a>
-              <a href="https://wa.me/923315319850" target="_blank" rel="noopener noreferrer" className="text-white/40 hover:text-white/80 transition-colors font-medium text-xs md:text-sm">
-                {lang === 'en' ? 'or talk to an Aghaaz rep ↗' : 'یا آغاز نمائندہ سے بات کریں ↗'}
-              </a>
-            </div>
-          </div>
-        </section>
       </main>
+
+      {/* Warp blackout + single WarpCanvas */}
+      {(flyingIn || flyingHome) && (
+        <>
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: '#000',
+            zIndex: 499,
+          }} />
+          <WarpCanvas
+            active={true}
+            direction={flyingIn ? 'in' : 'out'}
+            onPeak={() => {
+              if (flyingIn) navigateToScene(1)
+              if (flyingHome) navigateToScene(0)
+            }}
+            onComplete={() => {
+              setFlyingIn(false)
+              setFlyingHome(false)
+            }}
+          />
+        </>
+      )}
     </>
-  );
+  )
 }
