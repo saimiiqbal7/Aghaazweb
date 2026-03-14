@@ -207,112 +207,109 @@ export default function Home() {
       <main className="relative z-10 w-full h-screen overflow-hidden">
 
         {/* ── SCENE 0 — HERO ──────────────────────────────────── */}
-        <section className={s(0)}>
-          <div className="scene-inner flex flex-col items-center justify-center text-center gap-8 max-w-5xl mx-auto">
+        <section className={s(0)} style={{ position: 'relative', overflow: 'visible' }}>
+          <div className="scene-inner flex flex-col items-center justify-center text-center gap-8 max-w-5xl mx-auto" style={{
+            padding: '0 2rem',
+            position: 'relative',
+            zIndex: 1,
+          }}>
+            <div style={{
+              position: 'absolute',
+              top: '30%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '60vw',
+              height: '30vh',
+              background: 'radial-gradient(ellipse, rgba(191,255,0,0.06) 0%, transparent 70%)',
+              pointerEvents: 'none',
+              zIndex: -1,
+            }} />
             <h1
-              className={`scene-text delay-1 animated-headline headline-xl max-w-5xl ${lang === 'ur' ? 'urdu-text' : ''}`}
-              style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '0.2em' }}
+              className={`scene-text delay-1 ${lang === 'ur' ? 'urdu-text' : ''}`}
+              style={{
+                fontSize: 'clamp(3rem, 8.5vw, 8.5rem)',
+                fontWeight: 900,
+                letterSpacing: '-0.04em',
+                lineHeight: 1.02,
+                margin: 0,
+                textAlign: 'center',
+              }}
             >
               {lang === 'en' ? (
                 <>
-                  <span>The End of</span>
+                  <span style={{ color: 'white' }}>The End of</span>
                   <br />
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.2em', flexWrap: 'wrap', justifyContent: 'center' }}>
-                    <span>Boring Lectures</span>
-                    <span style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      WebkitTextFillColor: 'initial',
-                      animation: 'logo-float 3s ease-in-out infinite',
-                    }}>
-                      <img
-                        src="/aghaaz-logo.png"
-                        alt=""
-                        style={{
-                          height: '0.85em',
-                          width: 'auto',
-                          objectFit: 'contain',
-                          display: 'inline-block',
-                          verticalAlign: 'middle',
-                          borderRadius: '0.15em',
-                          filter: 'brightness(1.1)',
-                        }}
-                      />
-                    </span>
-                  </span>
+                  <span style={{
+                    background: 'linear-gradient(135deg, white 0%, white 40%, #BFFF00 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}>Boring Lectures</span>
                 </>
               ) : (
                 <>
-                  <span>بورنگ لیکچرز کا خاتمہ</span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', WebkitTextFillColor: 'initial' }}>
-                    <img
-                      src="/aghaaz-logo.png"
-                      alt=""
-                      style={{ height: '0.85em', width: 'auto', objectFit: 'contain', borderRadius: '0.15em' }}
-                    />
-                  </span>
+                  <span style={{ color: 'white' }}>بورنگ لیکچرز کا</span>
+                  {' '}
+                  <span style={{
+                    background: 'linear-gradient(135deg, white 0%, #BFFF00 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}>خاتمہ</span>
                 </>
               )}
             </h1>
 
-            <p className={`scene-text delay-3 text-base md:text-xl text-white/40 font-medium max-w-xl leading-relaxed ${lang==='ur' ? 'urdu-text' : ''}`}>
-              {lang==='en'
-                ? '10-minute lessons. Built-in quizzes. AI tutoring. For Pakistani Matric & FSc students.'
-                : '10 منٹ کے اسباق۔ بلٹ ان کوئزز۔ AI ٹیوٹرنگ۔ پاکستانی میٹرک اور FSc طلباء کے لیے۔'}
+            <p className={`scene-text delay-2 ${lang === 'ur' ? 'urdu-text' : ''}`} style={{
+              fontSize: 'clamp(0.8rem, 1.4vw, 1rem)',
+              color: 'rgba(255,255,255,0.55)',
+              fontWeight: 500,
+              letterSpacing: '0.02em',
+              lineHeight: 1.6,
+              maxWidth: 420,
+              margin: 0,
+              whiteSpace: 'pre-line',
+              textShadow: '0 0 20px rgba(191,255,0,0.3), 0 0 40px rgba(191,255,0,0.12)',
+              filter: 'drop-shadow(0 0 8px rgba(191,255,0,0.2))',
+            }}>
+              {lang === 'en'
+                ? '10-minute lessons. Built-in quizzes. AI tutoring.\nFor Pakistani Matric & FSc students.'
+                : '10 منٹ کے اسباق۔ بلٹ ان کوئزز۔ AI ٹیوٹرنگ۔\nپاکستانی میٹرک اور FSc طلباء کے لیے۔'}
             </p>
 
-            <div className="scene-text delay-4" style={{
+            <div className="scene-text delay-3" style={{
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: '0.875rem',
-              marginTop: '0.75rem',
+              gap: '0.65rem',
               width: '100%',
-              maxWidth: 440,
+              maxWidth: 380,
               position: 'relative',
             }}>
 
-              {/* Arrow — points at whichever button is active */}
               <div className="neon-arrow" style={{
                 position: 'absolute',
-                left: -150,
-                top: watched ? 'calc(50% + 28px)' : 'calc(50% - 28px)',
+                left: -80,
+                top: watched ? 'calc(50% + 30px)' : 'calc(50% - 30px)',
                 transform: 'translateY(-50%)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-end',
-                gap: 4,
                 transition: 'top 0.7s cubic-bezier(0.16,1,0.3,1)',
                 animation: 'arrow-float 1.6s ease-in-out infinite',
                 zIndex: 10,
                 pointerEvents: 'none',
               }}>
-                <span style={{
-                  fontSize: 9,
-                  fontWeight: 800,
-                  letterSpacing: '0.15em',
-                  color: 'rgba(191,255,0,0.55)',
-                  textTransform: 'uppercase',
-                  whiteSpace: 'nowrap',
-                }}>
-                  {watched ? 'enter here' : 'start here'}
-                </span>
-                <svg width="88" height="52" viewBox="0 0 88 52" fill="none">
-                  <path
-                    d="M 8 44 C 14 42, 28 36, 44 24 C 58 13, 70 9, 82 8"
-                    stroke="rgba(191,255,0,0.65)"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    fill="none"
-                  />
-                  <path
-                    d="M 82 8 L 71 7 M 82 8 L 79 17"
-                    stroke="rgba(191,255,0,0.65)"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    fill="none"
-                  />
-                </svg>
+                <img
+                  src="/aghaaz-logo.png"
+                  alt=""
+                  style={{
+                    width: 40,
+                    height: 40,
+                    objectFit: 'contain',
+                    borderRadius: 10,
+                    transform: 'rotate(45deg)',
+                    filter: 'drop-shadow(0 0 10px rgba(191,255,0,0.5))',
+                    opacity: 0.9,
+                  }}
+                />
               </div>
 
               {/* What's Aghaaz? */}
@@ -323,7 +320,7 @@ export default function Home() {
                     inset: 0,
                     borderRadius: 14,
                     border: '1.5px solid rgba(191,255,0,0.7)',
-                    boxShadow: '0 0 12px rgba(191,255,0,0.4), 0 0 30px rgba(191,255,0,0.15), inset 0 0 12px rgba(191,255,0,0.05)',
+                    boxShadow: '0 0 14px rgba(191,255,0,0.35), 0 0 40px rgba(191,255,0,0.12), inset 0 0 14px rgba(191,255,0,0.04)',
                     zIndex: 0,
                     pointerEvents: 'none',
                     animation: 'neon-pulse 2.5s ease-in-out infinite',
@@ -335,17 +332,21 @@ export default function Home() {
                     position: 'relative',
                     zIndex: 1,
                     width: '100%',
-                    padding: '15px 32px',
+                    padding: '16px 32px',
                     borderRadius: 13,
-                    border: watched ? '0.5px solid rgba(255,255,255,0.08)' : 'none',
-                    background: watched ? 'rgba(255,255,255,0.03)' : '#060f08',
-                    color: watched ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.85)',
+                    border: watched
+                      ? '0.5px solid rgba(255,255,255,0.07)'
+                      : '1px solid transparent',
+                    background: watched
+                      ? 'rgba(255,255,255,0.03)'
+                      : 'linear-gradient(135deg, rgba(191,255,0,0.08) 0%, rgba(0,0,0,0) 100%), #060f08',
+                    color: watched ? 'rgba(255,255,255,0.25)' : 'white',
                     fontWeight: 700,
-                    fontSize: 'clamp(0.9rem, 2.5vw, 1rem)',
+                    fontSize: 'clamp(0.9rem, 2vw, 1rem)',
                     cursor: 'pointer',
                     fontFamily: 'inherit',
                     letterSpacing: '0.01em',
-                    transition: 'all 0.5s ease',
+                    transition: 'all 0.4s ease',
                   }}
                 >
                   {lang === 'en' ? "What's Aghaaz?" : 'آغاز کیا ہے؟'}
@@ -360,7 +361,7 @@ export default function Home() {
                     inset: 0,
                     borderRadius: 14,
                     border: '1.5px solid rgba(191,255,0,0.7)',
-                    boxShadow: '0 0 12px rgba(191,255,0,0.4), 0 0 30px rgba(191,255,0,0.15), inset 0 0 12px rgba(191,255,0,0.05)',
+                    boxShadow: '0 0 14px rgba(191,255,0,0.35), 0 0 40px rgba(191,255,0,0.12), inset 0 0 14px rgba(191,255,0,0.04)',
                     zIndex: 0,
                     pointerEvents: 'none',
                     animation: 'neon-pulse 2.5s ease-in-out infinite',
@@ -372,17 +373,21 @@ export default function Home() {
                     position: 'relative',
                     zIndex: 1,
                     width: '100%',
-                    padding: '15px 32px',
+                    padding: '16px 32px',
                     borderRadius: 13,
-                    border: watched ? 'none' : '0.5px solid rgba(255,255,255,0.08)',
-                    background: watched ? '#060f08' : 'rgba(255,255,255,0.02)',
-                    color: watched ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.2)',
+                    border: watched
+                      ? '1px solid transparent'
+                      : '0.5px solid rgba(255,255,255,0.07)',
+                    background: watched
+                      ? 'linear-gradient(135deg, rgba(191,255,0,0.08) 0%, rgba(0,0,0,0) 100%), #060f08'
+                      : 'rgba(255,255,255,0.02)',
+                    color: watched ? 'white' : 'rgba(255,255,255,0.2)',
                     fontWeight: 700,
-                    fontSize: 'clamp(0.9rem, 2.5vw, 1rem)',
+                    fontSize: 'clamp(0.9rem, 2vw, 1rem)',
                     cursor: watched ? 'pointer' : 'default',
                     fontFamily: 'inherit',
                     letterSpacing: '0.01em',
-                    transition: 'all 0.5s ease',
+                    transition: 'all 0.4s ease',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',

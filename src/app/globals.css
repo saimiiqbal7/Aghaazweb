@@ -602,11 +602,6 @@ body {
   50%      { transform: translateY(-50%) translateX(-6px); }
 }
 
-@keyframes logo-float {
-  0%,100% { transform: translateY(0) rotate(-3deg); }
-  50%      { transform: translateY(-6px) rotate(3deg); }
-}
-
 /* ── FLY HOME ──────────────────────────────────────────────────── */
 /* ── MOBILE: hide arrows on small screens ──────────────────────── */
 @media (max-width: 700px) {
